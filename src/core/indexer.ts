@@ -20,7 +20,13 @@ export function buildThaiAddressIndex(data: RawData): TrigramIndex {
     if (tambon.deleted_at) continue
 
     const amphure = ampMap.get(tambon.amphure_id)
-    if (!amphure) continue
+    if (!amphure) {
+      console.warn(
+        `[thaizip] skipping tambon id=${tambon.id} (${tambon.name_th}): ` +
+        `amphure_id=${tambon.amphure_id} not found or deleted`
+      )
+      continue
+    }
 
     const province = provMap.get(amphure.province_id)
     if (!province) continue

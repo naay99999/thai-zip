@@ -1,6 +1,6 @@
 {
   "name": "thaizip",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Fast, fuzzy Thai address autocomplete library (headless + React)",
   "keywords": [
     "thai",
@@ -43,7 +43,8 @@
     "generate-data": "tsx src/data/generate.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",

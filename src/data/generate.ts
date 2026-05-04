@@ -16,7 +16,7 @@ function readJson<T>(filename: string): T {
 }
 
 function validateRawData(data: RawData): void {
-  if (!Array.isArray(data.geographies)) throw new Error('geographies must be an array')
+  if (data.geographies !== undefined && !Array.isArray(data.geographies)) throw new Error('geographies must be an array')
   if (!Array.isArray(data.provinces)) throw new Error('provinces must be an array')
   if (!Array.isArray(data.amphures)) throw new Error('amphures must be an array')
   if (!Array.isArray(data.tambons)) throw new Error('tambons must be an array')

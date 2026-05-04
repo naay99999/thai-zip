@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { buildThaiAddressIndex } from '../core/indexer'
 import { useThaiAddressAutocomplete } from '../react/useThaiAddressAutocomplete'
-import type { RawData, TrigramIndex } from '../types'
+import type { RawData, TrigramIndex, ThaiAddressSuggestion } from '../types'
 
 vi.useFakeTimers()
 
@@ -80,5 +80,22 @@ describe('useThaiAddressAutocomplete', () => {
     act(() => { vi.advanceTimersByTime(0) })
 
     expect(result.current.suggestions).toHaveLength(1)
+  })
+
+  it('selectSuggestion throws when called with a suggestion id not in current results', () => {
+    const { result } = renderHook(() => useThaiAddressAutocomplete({ index, debounce: 0 }))
+
+    const fakeSuggestion: ThaiAddressSuggestion = {
+      id: 'does-not-exist',
+      label: 'fake',
+      tambon: 'fake', tambonEn: 'fake',
+      amphure: 'fake', amphureEn: 'fake',
+      province: 'fake', provinceEn: 'fake',
+      zipCode: '00000',
+    }
+
+    expect(() => {
+      act(() => { result.current.selectSuggestion(fakeSuggestion) })
+    }).toThrow('[thaizip]')
   })
 })

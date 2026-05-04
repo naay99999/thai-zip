@@ -107,4 +107,42 @@ describe('searchThaiAddress', () => {
   it('returns empty for whitespace-only query', () => {
     expect(searchThaiAddress(index, '   ')).toHaveLength(0)
   })
+
+  // Fix 1: null index guard
+  it('returns empty array when index is null', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(searchThaiAddress(null as any, 'กรุงเทพ')).toHaveLength(0)
+  })
+
+  // Fix 3: query length limit
+  it('returns empty array for query longer than 300 characters', () => {
+    expect(searchThaiAddress(index, 'ก'.repeat(301))).toHaveLength(0)
+  })
+
+  // Fix — zip sort: exact match before partial match (covers search.ts lines 30-31)
+  it('zip exact match is returned before prefix-only match', () => {
+    // synthetic zip codes: "1090" (4-digit exact) and "10901" (5-digit prefix match)
+    const dataWithMixedZips: RawData = {
+      geographies: [],
+      provinces: mockData.provinces,
+      amphures: mockData.amphures,
+      tambons: [
+        { id: 888801, zip_code: 1090, name_th: 'เขตสั้น', name_en: 'Short', amphure_id: 1001, deleted_at: null },
+        { id: 888802, zip_code: 10901, name_th: 'เขตยาว', name_en: 'Long', amphure_id: 1001, deleted_at: null },
+      ],
+    }
+    const idx = buildThaiAddressIndex(dataWithMixedZips)
+    const results = searchThaiAddress(idx, '1090')
+    expect(results).toHaveLength(2)
+    expect(results[0].zipCode).toBe('1090')
+    expect(results[1].zipCode).toBe('10901')
+  })
+
+  // Fix — zip sort: partial matches sorted ascending (covers search.ts line 32)
+  it('zip partial matches are sorted ascending by zip code', () => {
+    // mockData has 50000 and 50200; query "50" prefix-matches both, neither is exact
+    const results = searchThaiAddress(index, '50')
+    expect(results[0].zipCode).toBe('50000')
+    expect(results[1].zipCode).toBe('50200')
+  })
 })

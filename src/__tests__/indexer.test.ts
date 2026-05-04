@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { buildThaiAddressIndex } from '../core/indexer'
 import type { RawData } from '../types'
 
@@ -72,5 +72,22 @@ describe('buildThaiAddressIndex', () => {
   it('trigram map contains English trigrams (lowercased)', () => {
     const index = buildThaiAddressIndex(mockData)
     expect(index.map.has('ban')).toBe(true)
+  })
+
+  it('skips tambons whose amphure_id has no match and emits console.warn', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const data: RawData = {
+      provinces: mockData.provinces,
+      amphures: mockData.amphures,
+      tambons: [
+        { id: 100101, zip_code: 10900, name_th: 'ลาดพร้าว', name_en: 'Lat Phrao', amphure_id: 1001, deleted_at: null },
+        { id: 999999, zip_code: 99999, name_th: 'ไม่มีอำเภอ', name_en: 'No Amphure', amphure_id: 9999, deleted_at: null },
+      ],
+    }
+    const index = buildThaiAddressIndex(data)
+    expect(index.records).toHaveLength(1)
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[thaizip]'))
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('9999'))
+    warnSpy.mockRestore()
   })
 })

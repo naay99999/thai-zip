@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0](https://github.com/naay99999/thai-zip/compare/thaizip-v0.3.0...thaizip-v0.4.0) (2026-05-05)
+
+### Features
+
+* make `geographies` optional in `RawData` — custom-index callers no longer need to supply the unused field ([#audit](https://github.com/naay99999/thai-zip))
+* add secondary sort for equal-score results — deterministic ordering by province → amphure → tambon name when trigram scores tie ([#audit](https://github.com/naay99999/thai-zip))
+* add query length guard (>300 chars) — `searchThaiAddress` returns `[]` for oversized inputs, safe for server-side use ([#audit](https://github.com/naay99999/thai-zip))
+* add `typecheck` script to package.json ([#audit](https://github.com/naay99999/thai-zip))
+
+### Bug Fixes
+
+* guard against null/undefined index in `searchThaiAddress` — returns `[]` instead of throwing TypeError ([#audit](https://github.com/naay99999/thai-zip))
+* emit `console.warn` when active tambons reference deleted amphures, rather than silently dropping them from the index ([#audit](https://github.com/naay99999/thai-zip))
+
 ## [0.3.0](https://github.com/naay99999/thai-zip/compare/thaizip-v0.2.1...thaizip-v0.3.0) (2026-04-21)
 
 

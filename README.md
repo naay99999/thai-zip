@@ -40,6 +40,9 @@ const results2 = searchThaiAddress(index, '10900')
 // ค้นหาด้วยภาษาอังกฤษ
 const results3 = searchThaiAddress(index, 'chiang mai')
 
+// ⚠️ ไม่รองรับ: ค้นหาแบบรวม text + รหัสไปรษณีย์ในครั้งเดียว (เช่น "ลาดพร้าว 10900")
+// ให้ค้นหาด้วยชื่อสถานที่ หรือรหัสไปรษณีย์ แยกกัน
+
 console.log(results)
 // [{ tambonId, tambonNameTh, tambonNameEn, amphureId, amphureNameTh, ... zipCode }, ...]
 ```
@@ -102,24 +105,28 @@ import { loadDefaultIndex } from 'thaizip/data'
 import { useThaiAddressAutocomplete } from 'thaizip'
 import type { TrigramIndex } from 'thaizip'
 
-function AddressForm() {
+// แนะนำ: แยก loading และ form ออกจากกัน เพื่อให้ hook เรียกหลัง index พร้อมแล้วเสมอ
+function AddressPage() {
   const [index, setIndex] = useState<TrigramIndex | null>(null)
 
   useEffect(() => {
     loadDefaultIndex().then(setIndex)
   }, [])
 
+  if (!index) return <p>กำลังโหลด...</p>
+  return <AddressForm index={index} />
+}
+
+function AddressForm({ index }: { index: TrigramIndex }) {
   const { query, setQuery, suggestions, isOpen, selectSuggestion, clear } =
     useThaiAddressAutocomplete({
-      index: index!,
+      index,
       limit: 10,       // default: 10
       debounce: 200,   // default: 200ms
       threshold: 0.4,  // default: 0.4
     })
 
   const [address, setAddress] = useState(null)
-
-  if (!index) return <p>กำลังโหลด...</p>
 
   return (
     <div>
@@ -207,10 +214,10 @@ GET /address/search?q=10900
 import { buildThaiAddressIndex } from 'thaizip'
 
 const index = buildThaiAddressIndex({
-  geographies: [...],
   provinces: [...],
   amphures: [...],
   tambons: [...],
+  // geographies ไม่จำเป็นต้องระบุ (ไม่ได้ใช้งานโดย indexer)
 })
 ```
 
@@ -251,18 +258,26 @@ type ResolvedThaiAddress = {
 
 ---
 
-## Migration จาก v0.x
+## Migration จาก v0.2.x → v0.3.0+
 
 ```ts
-// v0.x (sync)
+// v0.2.x (sync, bundle ~630KB)
 import { defaultIndex } from 'thaizip/data'
 const results = searchThaiAddress(defaultIndex, query)
 
-// v1.0 (async)
+// v0.3.0+ (async, bundle ~132KB gzip)
 import { loadDefaultIndex } from 'thaizip/data'
-const index = await loadDefaultIndex()  // cache อัตโนมัติ
+const index = await loadDefaultIndex()  // cache อัตโนมัติ หลังจากโหลดครั้งแรก
 const results = searchThaiAddress(index, query)
 ```
+
+---
+
+## ข้อมูลที่อยู่
+
+ข้อมูลอ้างอิงจากการแบ่งเขตการปกครองของไทย (77 จังหวัด, 920 อำเภอ, ~7,385 ตำบล)
+
+ตำบลที่ยังมีสถานะ active แต่อ้างอิงอำเภอที่ถูก soft-deleted จะถูกข้ามโดย index โดยอัตโนมัติ พร้อมแสดง `console.warn` ให้ทราบ
 
 ---
 

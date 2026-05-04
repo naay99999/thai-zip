@@ -92,7 +92,7 @@ export type RawTambon = {
 }
 
 export type RawData = {
-  geographies: RawGeography[]
+  geographies?: RawGeography[]  // unused by buildThaiAddressIndex; optional for custom-index callers
   provinces: RawProvince[]
   amphures: RawAmphure[]
   tambons: RawTambon[]
