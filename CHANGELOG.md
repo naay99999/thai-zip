@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/naay99999/thai-zip/compare/thaizip-v0.5.0...thaizip-v0.5.1) (2026-06-02)
+
+
+### Features
+
+* **data:** add clearDefaultIndex() to reset the singleton cache ([a83fd06](https://github.com/naay99999/thai-zip/commit/a83fd06acaeb5155593e23b23eed83c3b4dc9579))
+
 ## [0.5.0](https://github.com/naay99999/thai-zip/compare/thaizip-v0.4.0...thaizip-v0.5.0) (2026-05-04)
 
 
