@@ -4,6 +4,10 @@ import type { CompactProvince, CompactAmphure, CompactTambon } from './defaultDa
 
 let cached: TrigramIndex | null = null
 
+export function clearDefaultIndex(): void {
+  cached = null
+}
+
 export async function loadDefaultIndex(): Promise<TrigramIndex> {
   if (cached) return cached
   const { p, a, t } = await import('./defaultData') as {

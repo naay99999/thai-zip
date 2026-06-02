@@ -1,4 +1,5 @@
 export { buildThaiAddressIndex } from './core/indexer'
+export { clearDefaultIndex } from './data/loader'
 export { searchThaiAddress } from './core/search'
 export { formatThaiAddressSuggestion } from './core/formatter'
 export { resolveThaiAddress } from './core/resolver'

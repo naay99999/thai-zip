@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { loadDefaultIndex } from '../data'
+import { loadDefaultIndex, clearDefaultIndex } from '../data'
 
 describe('loadDefaultIndex', () => {
   it('returns a valid TrigramIndex', async () => {
@@ -13,6 +13,14 @@ describe('loadDefaultIndex', () => {
     const a = await loadDefaultIndex()
     const b = await loadDefaultIndex()
     expect(a).toBe(b)
+  })
+
+  it('clearDefaultIndex resets cache so next call rebuilds', async () => {
+    const a = await loadDefaultIndex()
+    clearDefaultIndex()
+    const b = await loadDefaultIndex()
+    expect(a).not.toBe(b)
+    expect(b.records.length).toBeGreaterThan(7000)
   })
 
   it('records have expected fields', async () => {
