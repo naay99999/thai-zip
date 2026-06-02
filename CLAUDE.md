@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run build          # Build ESM + CJS bundles with type declarations (tsup)
-npm run generate-data  # Regenerate src/data/defaultIndex.ts from raw JSON data
+npm run generate-data  # Regenerate src/data/defaultData.ts from raw JSON data
 npm test               # Run all tests once
 npm run test:watch     # Run tests in watch mode
 npm run test:coverage  # Run tests with coverage report
@@ -23,12 +23,12 @@ This is a headless Thai address autocomplete library published as `thaizip`. It 
 
 **Package exports:**
 - `thaizip` — core functions + React hook
-- `thaizip/data` — exports `loadDefaultIndex()` (async, lazy-loads the pre-built compact address data ~132 KB gzip; separate export so tree-shakers can isolate it)
+- `thaizip/data` — exports `loadDefaultIndex()` (async, lazy-loads compact tuple arrays from `defaultData.ts` and builds the TrigramIndex at runtime; separate export so tree-shakers can isolate it)
 
 **Data pipeline:**
 - Raw JSON files in `data/` (thai_geographies, thai_provinces, thai_amphures, thai_tambons) are the source of truth
-- `npm run generate-data` (`src/data/generate.ts`) joins these four tables into flat `ThaiAddressRecord` objects and writes a pre-built `TrigramIndex` to `src/data/defaultIndex.ts`
-- The pre-built index is exported as `defaultIndex` so consumers pay zero build cost at runtime
+- `npm run generate-data` (`src/data/generate.ts`) reads raw JSON tables, filters soft-deleted rows, and writes compact tuple arrays to `src/data/defaultData.ts`
+- `loadDefaultIndex()` in `src/data/loader.ts` assembles the `TrigramIndex` at first call and caches the result; subsequent calls return the same instance
 
 **Search engine (`src/core/`):**
 - `normalizer.ts` — strips Thai address prefixes (จังหวัด/อำเภอ/ตำบล/แขวง/เขต) and Thai tone marks, then lowercases; applied to both index and query

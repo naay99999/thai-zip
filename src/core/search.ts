@@ -36,7 +36,6 @@ export function searchThaiAddress(
   }
 
   const queryTrigrams = extractTrigramsNormalized(normalized)
-  if (queryTrigrams.size === 0) return []
 
   // Accumulate hit counts per record index
   const hits = new Map<number, number>()
