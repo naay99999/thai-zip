@@ -1,6 +1,6 @@
 {
   "name": "thaizip",
-  "version": "2.0.0",
+  "version": "0.6.0",
   "description": "Fast, fuzzy Thai address autocomplete library (headless + React)",
   "keywords": [
     "thai",
