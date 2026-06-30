@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0](https://github.com/naay99999/thai-zip/compare/thaizip-v0.5.1...thaizip-v0.6.0) (2026-06-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* useThaiAddressAutocomplete moved from thaizip → thaizip/react clearDefaultIndex removed from thaizip main entry → thaizip/data
+
+### Features
+
+* v1.0.0 — thaizip/react subpath, loader reliability, search fixes ([f1432d8](https://github.com/naay99999/thai-zip/commit/f1432d8c1a5de44a2acc7ed5e04b5c648029fe63))
+
 ## [1.0.0](https://github.com/naay99999/thai-zip/compare/thaizip-v0.5.1...thaizip-v1.0.0) (2026-07-01)
 
 ### ⚠ BREAKING CHANGES
