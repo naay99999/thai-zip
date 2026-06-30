@@ -84,11 +84,15 @@ export type RawAmphure = {
 
 export type RawTambon = {
   id: number
-  zip_code: number
+  zip_code: number | string
   name_th: string
   name_en: string
   amphure_id: number
   deleted_at: string | null
+}
+
+export type BuildIndexOptions = {
+  onSkip?: (tambon: RawTambon) => void
 }
 
 export type RawData = {

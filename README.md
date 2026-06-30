@@ -20,6 +20,16 @@ npm install thaizip
 
 ---
 
+## Package exports
+
+| import path | เนื้อหา |
+|---|---|
+| `thaizip` | core functions + types ทั้งหมด (ไม่มี React) |
+| `thaizip/react` | `useThaiAddressAutocomplete` hook + types |
+| `thaizip/data` | `loadDefaultIndex`, `clearDefaultIndex` |
+
+---
+
 ## การใช้งานพื้นฐาน (Vanilla JS / TypeScript)
 
 ### โหลด index และค้นหาที่อยู่
@@ -97,13 +107,13 @@ const resolved = resolveThaiAddress(results[0])
 
 ### `useThaiAddressAutocomplete`
 
-Hook นี้จัดการ state ของ query, suggestions, debounce ให้ทั้งหมด
+Hook นี้จัดการ state ของ query, suggestions, debounce ให้ทั้งหมด **import จาก `thaizip/react`**
 
 ```tsx
 import { useState, useEffect } from 'react'
 import { loadDefaultIndex } from 'thaizip/data'
-import { useThaiAddressAutocomplete } from 'thaizip'
-import type { TrigramIndex } from 'thaizip'
+import { useThaiAddressAutocomplete } from 'thaizip/react'
+import type { TrigramIndex, ResolvedThaiAddress } from 'thaizip/react'
 
 // แนะนำ: แยก loading และ form ออกจากกัน เพื่อให้ hook เรียกหลัง index พร้อมแล้วเสมอ
 function AddressPage() {
@@ -126,7 +136,7 @@ function AddressForm({ index }: { index: TrigramIndex }) {
       threshold: 0.4,  // default: 0.4
     })
 
-  const [address, setAddress] = useState(null)
+  const [address, setAddress] = useState<ResolvedThaiAddress | null>(null)
 
   return (
     <div>
@@ -218,16 +228,30 @@ const index = buildThaiAddressIndex({
   amphures: [...],
   tambons: [...],
   // geographies ไม่จำเป็นต้องระบุ (ไม่ได้ใช้งานโดย indexer)
+}, {
+  // รับ callback เมื่อ tambon ถูกข้ามเนื่องจากไม่พบ amphure/province
+  onSkip: (tambon) => console.warn('skipped tambon:', tambon.id),
 })
 ```
 
-รูปแบบข้อมูล raw ดูได้จาก type `RawData`, `RawProvince`, `RawAmphure`, `RawTambon` ที่ export มาจาก library
+### reset cache (สำหรับ test isolation)
+
+```ts
+import { clearDefaultIndex } from 'thaizip/data'
+
+clearDefaultIndex() // รีเซ็ต singleton cache ของ loadDefaultIndex
+```
+
+รูปแบบข้อมูล raw ดูได้จาก type `RawData`, `RawProvince`, `RawAmphure`, `RawTambon` ที่ export มาจาก `thaizip`
 
 ---
 
 ## Types หลัก
 
+Types ทั้งหมดสามารถ import ได้จาก `thaizip` หรือ `thaizip/react` (React-specific types)
+
 ```ts
+// จาก thaizip หรือ thaizip/react
 type ThaiAddressSuggestion = {
   id: string
   label: string        // "ตำบล > อำเภอ > จังหวัด XXXXX"
@@ -240,6 +264,7 @@ type ThaiAddressSuggestion = {
   zipCode: string
 }
 
+// จาก thaizip หรือ thaizip/react
 type ResolvedThaiAddress = {
   tambon: string        // alias: subdistrict
   tambonEn: string      // alias: subdistrictEn
@@ -254,6 +279,33 @@ type ResolvedThaiAddress = {
   districtEn: string
   postalCode: string
 }
+```
+
+---
+
+## Migration จาก v0.5.x → v1.0.0
+
+### hook ย้ายไปอยู่ที่ `thaizip/react`
+
+```ts
+// v0.5.x
+import { useThaiAddressAutocomplete } from 'thaizip'
+import type { TrigramIndex } from 'thaizip'
+
+// v1.0.0
+import { useThaiAddressAutocomplete } from 'thaizip/react'
+import type { TrigramIndex, ResolvedThaiAddress, ThaiAddressSuggestion } from 'thaizip/react'
+// หรือยังคง import types จาก 'thaizip' ได้เช่นเดิม
+```
+
+### `clearDefaultIndex` ย้ายไปอยู่ที่ `thaizip/data`
+
+```ts
+// v0.5.x
+import { clearDefaultIndex } from 'thaizip'
+
+// v1.0.0
+import { clearDefaultIndex } from 'thaizip/data'
 ```
 
 ---
@@ -277,7 +329,7 @@ const results = searchThaiAddress(index, query)
 
 ข้อมูลอ้างอิงจากการแบ่งเขตการปกครองของไทย (77 จังหวัด, 920 อำเภอ, ~7,385 ตำบล)
 
-ตำบลที่ยังมีสถานะ active แต่อ้างอิงอำเภอที่ถูก soft-deleted จะถูกข้ามโดย index โดยอัตโนมัติ พร้อมแสดง `console.warn` ให้ทราบ
+ตำบลที่ยังมีสถานะ active แต่อ้างอิงอำเภอหรือจังหวัดที่ถูก soft-deleted จะถูกข้ามโดย index โดยอัตโนมัติ ใช้ `onSkip` callback ใน `buildThaiAddressIndex` เพื่อรับแจ้ง
 
 ---
 

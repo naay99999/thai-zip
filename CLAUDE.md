@@ -10,6 +10,7 @@ npm run generate-data  # Regenerate src/data/defaultData.ts from raw JSON data
 npm test               # Run all tests once
 npm run test:watch     # Run tests in watch mode
 npm run test:coverage  # Run tests with coverage report
+npm run typecheck      # TypeScript check only (no emit)
 ```
 
 To run a single test file:
@@ -27,19 +28,21 @@ This is a headless Thai address autocomplete library published as `thaizip`. It 
 
 **Data pipeline:**
 - Raw JSON files in `data/` (thai_geographies, thai_provinces, thai_amphures, thai_tambons) are the source of truth
-- `npm run generate-data` (`src/data/generate.ts`) reads raw JSON tables, filters soft-deleted rows, and writes compact tuple arrays to `src/data/defaultData.ts`
-- `loadDefaultIndex()` in `src/data/loader.ts` assembles the `TrigramIndex` at first call and caches the result; subsequent calls return the same instance
+- `npm run generate-data` (`src/data/generate.ts`) reads raw JSON tables, filters soft-deleted rows *at generate time*, and writes compact tuple arrays to `src/data/defaultData.ts` — the generated file already contains only active records (no `deleted_at` filtering at runtime for the default index)
+- Compact tuple formats: `CompactProvince = [id, nameTh, nameEn]`, `CompactAmphure = [id, nameTh, nameEn, provinceId]`, `CompactTambon = [id, nameTh, nameEn, amphureId, zipCode]`
+- `loadDefaultIndex()` in `src/data/loader.ts` assembles the `TrigramIndex` at first call and caches the result as a module-level singleton; `clearDefaultIndex()` resets the singleton (exported from both `thaizip` and `thaizip/data` — use in tests to isolate state)
 
 **Search engine (`src/core/`):**
-- `normalizer.ts` — strips Thai address prefixes (จังหวัด/อำเภอ/ตำบล/แขวง/เขต) and Thai tone marks, then lowercases; applied to both index and query
-- `trigrams.ts` — `extractTrigrams(text)` normalises then extracts; `extractTrigramsNormalized(text)` skips normalisation for callers (e.g. `search.ts`) that already hold a normalised string
-- `indexer.ts` — `buildThaiAddressIndex(RawData)` joins the four tables, skips soft-deleted rows, builds a trigram inverted index (`Map<trigram, Set<recordIndex>>`), and a `zipIndex` (`Map<zipCode, number[]>`) for O(1) zip prefix lookup
-- `search.ts` — `searchThaiAddress(index, query, options?)` extracts trigrams from the normalised query, counts hits per record, scores as `hits/queryTrigrams`, filters by threshold (default 0.4), returns top-N. Zip code queries use `zipIndex` instead of trigrams; results are sorted exact-match-first then ascending zip.
-- `formatter.ts` — converts a `ThaiAddressRecord` into a `ThaiAddressSuggestion` (display label + structured fields)
+- `normalizer.ts` — strips Thai address prefixes (full-form จังหวัด/อำเภอ/ตำบล/แขวง/เขต and abbreviated จ./อ./ต./ข.) and Thai tone marks, then lowercases; applied to both index and query
+- `trigrams.ts` — `extractTrigrams(text)` normalises then extracts; `extractTrigramsNormalized(text)` skips normalisation for callers (e.g. `search.ts`) that already hold a normalised string. Strings shorter than 3 chars use the whole string as their own trigram key.
+- `indexer.ts` — `buildThaiAddressIndex(RawData, options?)` joins the four tables, skips soft-deleted rows, builds a trigram inverted index (`Map<trigram, Set<recordIndex>>`), and a `zipIndex` (`Map<zipCode, number[]>`) for O(1) exact-zip lookup. Province and amphure trigrams are pre-computed once per unique parent to avoid redundant normalization. Pass `options.onSkip` to receive a callback for tambons that are skipped due to a missing/deleted amphure.
+- `search.ts` — `searchThaiAddress(index, query, options?)` extracts trigrams from the normalised query, counts hits per record, scores as `hits/queryTrigrams`, filters by threshold (default 0.4), returns top-N. Non-digit queries shorter than 3 chars return empty immediately. Zip code queries (all-digit input, ≥ 2 digits) use `zipIndex` (O(n\_zips) prefix scan, O(1) only for exact zip); results are sorted exact-match-first then ascending zip.
+- `formatter.ts` — converts a `ThaiAddressRecord` into a `ThaiAddressSuggestion`; `id` is `String(tambonId)` and is used as the key for `selectSuggestion`'s O(1) record lookup
 - `resolver.ts` — converts a `ThaiAddressRecord` into a `ResolvedThaiAddress` with both Thai-conventional aliases (tambon/amphure/province) and English-conventional aliases (subdistrict/district/postalCode)
 
 **React integration (`src/react/`):**
 - `useThaiAddressAutocomplete` wraps `searchThaiAddress` with debounce (default 200 ms) and manages query/suggestions state
+- Returns `{ query, setQuery, suggestions, isOpen, selectSuggestion, clear }`. `isOpen` is `query.length > 0 && suggestions.length > 0`.
 - `selectSuggestion` does O(1) lookup via `Map<id, ThaiAddressRecord>`, calls `resolveThaiAddress`, and clears suggestions. `query` is intentionally left unchanged — call `clear()` to reset the input too.
 
 **Build output (`tsup`):**

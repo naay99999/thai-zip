@@ -33,4 +33,10 @@ describe('loadDefaultIndex', () => {
     expect(typeof record.provinceId).toBe('number')
     expect(typeof record.zipCode).toBe('string')
   })
+
+  it('concurrent calls before first resolves return the same instance (A-6)', async () => {
+    clearDefaultIndex()
+    const [a, b] = await Promise.all([loadDefaultIndex(), loadDefaultIndex()])
+    expect(a).toBe(b)
+  })
 })

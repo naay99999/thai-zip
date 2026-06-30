@@ -28,11 +28,15 @@ function validateRawData(data: RawData): void {
   for (const a of data.amphures) {
     if (typeof a.id !== 'number') throw new Error(`amphure missing id: ${JSON.stringify(a)}`)
     if (typeof a.province_id !== 'number') throw new Error(`amphure missing province_id: ${JSON.stringify(a)}`)
+    if (typeof a.name_th !== 'string') throw new Error(`amphure missing name_th: ${JSON.stringify(a)}`)
+    if (typeof a.name_en !== 'string') throw new Error(`amphure missing name_en: ${JSON.stringify(a)}`)
   }
   for (const t of data.tambons) {
     if (typeof t.id !== 'number') throw new Error(`tambon missing id: ${JSON.stringify(t)}`)
-    if (typeof t.zip_code !== 'number') throw new Error(`tambon missing zip_code: ${JSON.stringify(t)}`)
+    if (typeof t.zip_code !== 'number' && typeof t.zip_code !== 'string') throw new Error(`tambon missing zip_code: ${JSON.stringify(t)}`)
     if (typeof t.amphure_id !== 'number') throw new Error(`tambon missing amphure_id: ${JSON.stringify(t)}`)
+    if (typeof t.name_th !== 'string') throw new Error(`tambon missing name_th: ${JSON.stringify(t)}`)
+    if (typeof t.name_en !== 'string') throw new Error(`tambon missing name_en: ${JSON.stringify(t)}`)
   }
 }
 

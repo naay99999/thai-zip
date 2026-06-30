@@ -1,6 +1,6 @@
 {
   "name": "thaizip",
-  "version": "0.5.1",
+  "version": "1.0.0",
   "description": "Fast, fuzzy Thai address autocomplete library (headless + React)",
   "keywords": [
     "thai",
@@ -24,6 +24,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
     },
     "./data": {
       "types": "./dist/data.d.ts",

@@ -30,10 +30,16 @@ export function searchThaiAddress(
     matches.sort((a, b) => {
       if (a.zipCode === normalized && b.zipCode !== normalized) return -1
       if (b.zipCode === normalized && a.zipCode !== normalized) return 1
-      return a.zipCode.localeCompare(b.zipCode)
+      return a.zipCode.localeCompare(b.zipCode, undefined, { numeric: true })
     })
     return matches.slice(0, limit)
   }
+
+  // Queries shorter than 3 chars produce a single-element trigram set where every
+  // partial hit scores 1.0 — meaningless for text search.
+  // Exception: if the raw query was longer (e.g. "ต.กา" normalizes to "กา"),
+  // a Thai address prefix was stripped — allow through to avoid silent empty results.
+  if (normalized.length < 3 && query.trim().length < 3) return []
 
   const queryTrigrams = extractTrigramsNormalized(normalized)
 
@@ -60,9 +66,9 @@ export function searchThaiAddress(
     const ra = index.records[a.idx]
     const rb = index.records[b.idx]
     return (
-      ra.provinceNameTh.localeCompare(rb.provinceNameTh) ||
-      ra.amphureNameTh.localeCompare(rb.amphureNameTh) ||
-      ra.tambonNameTh.localeCompare(rb.tambonNameTh)
+      ra.provinceNameTh.localeCompare(rb.provinceNameTh, 'th') ||
+      ra.amphureNameTh.localeCompare(rb.amphureNameTh, 'th') ||
+      ra.tambonNameTh.localeCompare(rb.tambonNameTh, 'th')
     )
   })
 

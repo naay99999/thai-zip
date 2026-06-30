@@ -46,6 +46,22 @@ describe('normalizeThaiAddressText', () => {
     expect(normalizeThaiAddressText('')).toBe('')
   })
 
+  it('strips จ. abbreviated prefix', () => {
+    expect(normalizeThaiAddressText('จ.กรุงเทพมหานคร')).toBe('กรุงเทพมหานคร')
+  })
+
+  it('strips อ. abbreviated prefix', () => {
+    expect(normalizeThaiAddressText('อ.จตุจักร')).toBe('จตุจักร')
+  })
+
+  it('strips ต. abbreviated prefix', () => {
+    expect(normalizeThaiAddressText('ต.ลาดพร้าว')).toBe('ลาดพราว')
+  })
+
+  it('strips ข. abbreviated prefix', () => {
+    expect(normalizeThaiAddressText('ข.ลาดพร้าว')).toBe('ลาดพราว')
+  })
+
   it('strips all Thai tone mark variants', () => {
     // ่ ้ ๊ ๋ ็ ์
     expect(normalizeThaiAddressText('ก่า')).toBe('กา')

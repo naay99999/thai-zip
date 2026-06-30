@@ -145,4 +145,21 @@ describe('searchThaiAddress', () => {
     expect(results[0].zipCode).toBe('50000')
     expect(results[1].zipCode).toBe('50200')
   })
+
+  // A-3: sub-3-char text queries (A-5 test cases)
+  it('returns empty for single Thai character query', () => {
+    expect(searchThaiAddress(index, 'ก')).toHaveLength(0)
+  })
+
+  it('returns empty for two-char Thai query', () => {
+    expect(searchThaiAddress(index, 'กร')).toHaveLength(0)
+  })
+
+  it('returns empty for single English character query', () => {
+    expect(searchThaiAddress(index, 'b')).toHaveLength(0)
+  })
+
+  it('returns empty for two-char English query', () => {
+    expect(searchThaiAddress(index, 'ba')).toHaveLength(0)
+  })
 })

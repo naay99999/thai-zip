@@ -1,5 +1,5 @@
-const TONE_MARKS = /[\u0E48-\u0E4B\u0E47\u0E4C]/g
-const ADDRESS_PREFIXES = /^(จังหวัด|อำเภอ|ตำบล|แขวง|เขต)/
+const TONE_MARKS = /[่-๋็์]/g
+const ADDRESS_PREFIXES = /^(จังหวัด|อำเภอ|ตำบล|แขวง|เขต|จ\.|อ\.|ต\.|ข\.)/
 
 export function normalizeThaiAddressText(input: string): string {
   if (!input) return ''

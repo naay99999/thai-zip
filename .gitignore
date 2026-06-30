@@ -32,3 +32,6 @@ Thumbs.db
 .copilot/
 .aider*
 .continue/
+
+# docs
+/docs

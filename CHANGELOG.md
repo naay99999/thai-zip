@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.0.0](https://github.com/naay99999/thai-zip/compare/thaizip-v0.5.1...thaizip-v1.0.0) (2026-07-01)
+
+### ⚠ BREAKING CHANGES
+
+* `useThaiAddressAutocomplete` and `UseThaiAddressAutocompleteOptions` removed from `thaizip` main entry — import from `thaizip/react` instead
+* `clearDefaultIndex` removed from `thaizip` main entry — import from `thaizip/data` instead
+
+### Features
+
+* new `thaizip/react` subpath export — `useThaiAddressAutocomplete` hook plus `ThaiAddressSuggestion`, `ResolvedThaiAddress`, `TrigramIndex` types
+* `loadDefaultIndex` generation counter — in-flight promise can no longer overwrite cache reset by `clearDefaultIndex`
+* `onSkip` callback now fires on province-fail path (previously only on amphure-fail)
+* `selectSuggestion` cancels pending debounce timer before clearing suggestions
+* `useThaiAddressAutocomplete` re-searches immediately when `index` changes with a pending query (e.g. custom dataset swap)
+* `localeCompare` now uses explicit `'th'` locale for Thai name sorting and `{ numeric: true }` for zip code sorting — consistent across Alpine/Docker environments
+
+### Bug Fixes
+
+* `clearDefaultIndex` from main entry was a no-op in the built bundle (tree-shaker eliminated the body) — fixed by removing it from the main entry; use `thaizip/data`
+* `inflightPromise` was never cleared on rejection — subsequent calls would permanently receive the same rejected promise
+* abbreviated prefix queries (e.g. `"ต.กา"`) silently returned `[]` after prefix stripping reduced normalized length below 3
+* `generate.ts` validator incorrectly rejected string `zip_code` despite `RawTambon.zip_code: number | string`
+* JSDoc for `useThaiAddressAutocomplete` incorrectly stated that a new `index` reference re-triggers the debounce
+
 ## [0.5.1](https://github.com/naay99999/thai-zip/compare/thaizip-v0.5.0...thaizip-v0.5.1) (2026-06-02)
 
 

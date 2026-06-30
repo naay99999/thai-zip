@@ -74,8 +74,8 @@ describe('buildThaiAddressIndex', () => {
     expect(index.map.has('ban')).toBe(true)
   })
 
-  it('skips tambons whose amphure_id has no match and emits console.warn', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  it('skips tambons whose amphure_id has no match and calls onSkip', () => {
+    const onSkip = vi.fn()
     const data: RawData = {
       provinces: mockData.provinces,
       amphures: mockData.amphures,
@@ -84,10 +84,15 @@ describe('buildThaiAddressIndex', () => {
         { id: 999999, zip_code: 99999, name_th: 'ไม่มีอำเภอ', name_en: 'No Amphure', amphure_id: 9999, deleted_at: null },
       ],
     }
-    const index = buildThaiAddressIndex(data)
+    const index = buildThaiAddressIndex(data, { onSkip })
     expect(index.records).toHaveLength(1)
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[thaizip]'))
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('9999'))
-    warnSpy.mockRestore()
+    expect(onSkip).toHaveBeenCalledTimes(1)
+    expect(onSkip).toHaveBeenCalledWith(expect.objectContaining({ id: 999999 }))
+  })
+
+  it('does not call onSkip when all tambons have valid amphures', () => {
+    const onSkip = vi.fn()
+    buildThaiAddressIndex(mockData, { onSkip })
+    expect(onSkip).not.toHaveBeenCalled()
   })
 })
