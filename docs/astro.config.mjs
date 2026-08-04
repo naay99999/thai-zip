@@ -32,6 +32,7 @@ export default defineConfig({
           items: [
             { slug: 'guides/search' },
             { slug: 'guides/zip-lookup' },
+            { slug: 'guides/cascade' },
             { slug: 'guides/english-input' },
           ],
         },

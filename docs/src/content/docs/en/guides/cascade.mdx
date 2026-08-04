@@ -1,0 +1,34 @@
+---
+title: Cascade Dropdowns
+description: The province → district → subdistrict enumeration API, and how it exposes postal codes
+---
+
+import CascadeDemo from '../../../../components/demos/CascadeDemo'
+
+Pick a province, then a district, then a subdistrict — the postal code appears once all three are selected:
+
+<CascadeDemo client:visible locale="en" />
+
+## The enumeration API
+
+Besides text search, the library ships a set of functions for building cascading (province → district → subdistrict) dropdowns without typing anything:
+
+```ts
+import { listProvinces, listAmphures, listTambons } from 'thaizip'
+
+listProvinces(index)            // 77 provinces, sorted by Thai name
+listAmphures(index, provinceId)
+listTambons(index, amphureId)   // each with its zipCode
+```
+
+- `listProvinces(index)` returns all 77 provinces, sorted by their Thai name
+- `listAmphures(index, provinceId)` returns every district in that province
+- `listTambons(index, amphureId)` returns every subdistrict in that district, each with its `zipCode`
+
+## Why it's fast
+
+All three functions read from groupings (`byProvince` / `byAmphure`) that are pre-built when the index is created, not from scanning all 7,385 records on every call. That makes them cheap to call on every selection change without hurting performance.
+
+## Unknown ids
+
+Calling `listAmphures` or `listTambons` with an id that doesn't exist — a `0` placeholder before anything is selected, or stale state left over from a previous selection — always returns an empty array `[]`, never throws. That makes it safe to reset child selections when a parent selection changes, as the demo above does (picking a new province resets `amphureId`/`tambonId` back to `0`).
