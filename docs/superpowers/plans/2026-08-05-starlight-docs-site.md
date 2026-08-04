@@ -46,7 +46,8 @@ clearDefaultIndex(): void
 // 'thaizip/react'
 useThaiAddressAutocomplete(options: UseThaiAddressAutocompleteOptions): {
   query, setQuery, setQuerySilent, suggestions /* ThaiAddressSuggestion[] */,
-  isOpen, selectSuggestion /* (id: string) => ResolvedThaiAddress | null */, clear
+  isOpen, selectSuggestion /* (item: ThaiAddressSuggestion) => ResolvedThaiAddress | null — takes
+    the full suggestion, not a bare id; looks it up by item.id internally */, clear
 }
 ```
 
@@ -833,7 +834,7 @@ function HookInner({ index, locale }: { index: TrigramIndex; locale: Locale }) {
               key={s.id}
               style={{ cursor: 'pointer' }}
               onClick={() => {
-                const resolved = selectSuggestion(s.id)
+                const resolved = selectSuggestion(s)
                 if (resolved) setQuerySilent(s.label)
               }}
             >
@@ -875,7 +876,7 @@ Frontmatter `title: React Hook` (both). Embed `<HookDemo client:visible />`. Sec
 
 1. Intro — `useThaiAddressAutocomplete` from `thaizip/react`; built-in 200 ms debounce; `react`/`react-dom` are optional peers; built files ship `"use client"` so it works in Next.js App Router without a wrapper.
 2. Minimal unstyled example — the HookInner source, presented as copyable code.
-3. Return values table: `query`, `setQuery`, `setQuerySilent` (echo a choice into the input without reopening the dropdown), `suggestions`, `isOpen` (`query.length > 0 && suggestions.length > 0`), `selectSuggestion` (O(1) by id; returns `null` for stale ids, never throws; leaves `query` unchanged by design), `clear`.
+3. Return values table: `query`, `setQuery`, `setQuerySilent` (echo a choice into the input without reopening the dropdown), `suggestions`, `isOpen` (`query.length > 0 && suggestions.length > 0`), `selectSuggestion` (takes the full suggestion object, looks it up by `id` internally — O(1); returns `null` for a stale/unknown suggestion, never throws; leaves `query` unchanged by design), `clear`.
 4. **Callout (Starlight `:::tip`)** — "อยากได้ component สำเร็จรูปแบบ shadcn (Base UI + Tailwind)? ดู [react-thaizip](https://github.com/naay99999/react-thai-zip)" — the scope boundary from the spec: this page teaches the headless hook only, no styling.
 
 - [ ] **Step 3: Write `guides/custom-data.mdx` (th + en)**
