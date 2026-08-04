@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.1...thaizip-v0.7.2) (2026-08-04)
+
+
+### Bug Fixes
+
+* correct repository/homepage/bugs URLs to match GitHub repo ([c27b90c](https://github.com/naay99999/thai-zip/commit/c27b90cf6e8368cd220eca854c3741b745b47ffc))
+
 ## [0.7.1](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.0...thaizip-v0.7.1) (2026-08-04)
 
 
