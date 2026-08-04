@@ -1,0 +1,50 @@
+---
+title: Getting Started
+description: Install thaizip and search Thai addresses with fuzzy matching in a few lines
+---
+
+`thaizip` is a headless Thai address search library — zero runtime dependencies, no framework lock-in. This page walks through installing it and getting your first result.
+
+## Install
+
+```bash
+npm install thaizip
+```
+
+Requires Node.js 18 or later. React is an optional peer dependency — only needed if you want the `useThaiAddressAutocomplete` hook from `thaizip/react`. Without React, the core API works exactly the same.
+
+## Three entry points
+
+The package splits into three entry points so you only import what you use:
+
+| import path | contents |
+|---|---|
+| `thaizip` | core functions + types (no React code, 4.4 KB gzip) |
+| `thaizip/react` | `useThaiAddressAutocomplete` (ships `"use client"`) |
+| `thaizip/data` | `loadDefaultIndex`, `clearDefaultIndex` (132 KB gzip) |
+
+`thaizip/data` is separated out because it's by far the largest chunk — a tree-shaking bundler won't pull it in unless you actually import it.
+
+## Load the index and search
+
+```ts
+import { loadDefaultIndex } from 'thaizip/data'
+import { searchThaiAddress, formatThaiAddressSuggestion, resolveThaiAddress } from 'thaizip'
+
+const index = await loadDefaultIndex() // ~40ms of synchronous work, cached after
+
+searchThaiAddress(index, 'ลาดพร้าว')
+searchThaiAddress(index, 'bang rak')
+searchThaiAddress(index, '10500')
+```
+
+`loadDefaultIndex()` loads all tambon/amphure/province data and builds an in-memory trigram index. The result is cached as a module-level singleton, so subsequent calls return the same index immediately without rebuilding it.
+
+## Performance tip
+
+Call `loadDefaultIndex()` at mount time or when the route loads — don't wait for the user's first keystroke. Building the index costs roughly 40ms of synchronous main-thread work, and if that happens while the user is typing, it shows up as about 2 dropped frames.
+
+## Next steps
+
+- [Searching](../guides/search/) — `searchThaiAddress` options, result ranking, and known limitations
+- [English input](../guides/english-input/) — RTGS spellings and the supported alias list

@@ -1,0 +1,44 @@
+---
+title: Searching
+description: searchThaiAddress options, how results are ranked, and known limitations
+---
+
+import SearchDemo from '../../../../components/demos/SearchDemo'
+
+Try typing below — search by subdistrict, district, or province name (Thai or English), or by postal code:
+
+<SearchDemo client:visible locale="en" />
+
+## Basic usage
+
+`searchThaiAddress(index, query, options?)` returns `ThaiAddressRecord[]` directly — no extra transformation needed before you use it:
+
+```ts
+searchThaiAddress(index, query, {
+  limit: 10,                 // text queries only
+  threshold: 0.4,            // match quality 0–1
+  zipLimit: Infinity,        // all-digit queries — unlimited by default
+  romanizationAliases: true, // expand non-RTGS spellings
+})
+```
+
+- `limit` caps the number of results for text searches only; it has no effect on postal-code searches.
+- `threshold` is the minimum score (0–1) a result must reach to count as a match.
+- `zipLimit` controls how many results come back when the query is all digits. It defaults to unlimited on purpose — see the next section for why.
+- `romanizationAliases` turns on automatic expansion of non-RTGS English spellings to match what's in the dataset.
+
+## Ranking
+
+Results are sorted by trigram score first, then by how well the query matches the subdistrict's **own** name (exact → prefix → substring), and finally alphabetically in Thai order.
+
+That second key is what keeps ตำบลลาดพร้าว (Lat Phrao subdistrict) ranked above the other subdistricts that merely sit inside เขตลาดพร้าว (Lat Phrao district) — without it, both groups would tie on trigram score and the ordering would be arbitrary.
+
+## Limitations
+
+Combined text and zip code in a single query (`"ลาดพร้าว 10900"`) is not supported — search by name and by postal code separately.
+
+## How search works under the hood
+
+Before searching, the query text is always normalized first: Thai address prefixes are stripped, both full-form (จังหวัด/อำเภอ/ตำบล/แขวง/เขต) and abbreviated (จ. อ. ต. ข.), along with Thai tone marks. The indexed data goes through the same normalization when the index is built.
+
+Matching then happens by trigram — the normalized text is split into overlapping 3-character chunks, hits are counted per record, and each record's score is `hits / queryTrigrams`. Results scoring below `threshold` are filtered out before ranking.

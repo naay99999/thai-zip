@@ -1,0 +1,29 @@
+---
+title: English Input
+description: RTGS spellings that work out of the box, and the alias list for non-RTGS spellings
+---
+
+import SearchDemo from '../../../../components/demos/SearchDemo'
+
+Try typing a place name in English:
+
+<SearchDemo client:visible locale="en" initialQuery="bang rak" />
+
+## RTGS spellings work directly
+
+The indexed English names follow the Royal Thai General System of Transcription (RTGS). RTGS spellings like `bang rak` or `chatuchak` are matched directly, with no conversion needed.
+
+## Aliases for non-RTGS spellings
+
+Many people are more familiar with non-RTGS spellings, like `lardprao` or `krungthep`. thaizip ships a curated list of 84 aliases that rewrite these onto the actual RTGS names in the dataset before search runs, for example:
+
+- `lardprao` → `lat phrao`
+- `krungthep` → `bangkok`
+
+This is a **curated dictionary**, not an automatic transliterator — spellings that aren't on the list still won't match.
+
+Turn this off with `romanizationAliases: false` if you don't want spelling expansion:
+
+```ts
+searchThaiAddress(index, 'lardprao', { romanizationAliases: false })
+```

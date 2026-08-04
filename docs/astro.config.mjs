@@ -19,8 +19,19 @@ export default defineConfig({
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/naay99999/thai-zip' },
       ],
-      plugins: [starlightLinksValidator()],
-      sidebar: [],
+      plugins: [starlightLinksValidator({ errorOnRelativeLinks: false })],
+      sidebar: [
+        {
+          label: 'เริ่มต้น',
+          translations: { en: 'Start Here' },
+          items: [{ slug: 'getting-started' }],
+        },
+        {
+          label: 'คู่มือ',
+          translations: { en: 'Guides' },
+          items: [{ slug: 'guides/search' }, { slug: 'guides/english-input' }],
+        },
+      ],
     }),
     react(),
   ],
