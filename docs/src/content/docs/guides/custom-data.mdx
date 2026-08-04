@@ -1,0 +1,35 @@
+---
+title: ใช้ข้อมูลของคุณเอง
+description: สร้าง index จากข้อมูลของคุณเองด้วย buildThaiAddressIndex แทนข้อมูล default ที่แถมมากับไลบรารี
+---
+
+ไลบรารีมาพร้อมข้อมูลที่อยู่ทั้งประเทศผ่าน `thaizip/data` แต่บางกรณีคุณอาจต้องสร้าง index จากข้อมูลของตัวเองแทน — เช่น มีข้อมูลราชการฉบับใหม่กว่าที่แถมมา, ต้องการใช้เฉพาะบางจังหวัด/บางส่วนของประเทศ, หรือมี field เพิ่มเติมที่อยากผูกเข้ากับ record
+
+## รูปแบบข้อมูล (`RawData`)
+
+`buildThaiAddressIndex` รับข้อมูลเป็นออบเจ็กต์ที่มี 4 ตาราง field เป็น snake_case ตามข้อมูลราชการต้นฉบับ:
+
+- `geographies` — ตารางภูมิภาค เป็น optional และไม่ถูกใช้โดย `buildThaiAddressIndex` เลย ใส่มาเผื่อ caller ที่ต้องการเก็บไว้ใช้เอง
+- `provinces` — จังหวัด: `id`, `name_th`, `name_en`, `geography_id`, `deleted_at`
+- `amphures` — อำเภอ/เขต: `id`, `name_th`, `name_en`, `province_id`, `deleted_at`
+- `tambons` — ตำบล/แขวง: `id`, `zip_code`, `name_th`, `name_en`, `amphure_id`, `deleted_at`
+
+`deleted_at` เป็น soft delete — ตั้งค่าเป็นวันที่ (string) หรือ `null` ก็ได้ แถวที่มี `deleted_at` ไม่เป็น `null` จะถูกข้ามตอนสร้าง index และตำบลที่ชี้ไปหา `amphure_id` ที่ไม่มีอยู่จริงหรือถูกลบไปแล้ว ก็จะถูกข้ามเช่นกัน
+
+## ตัวอย่างการใช้งาน
+
+```ts
+import { buildThaiAddressIndex, validateRawData } from 'thaizip'
+
+const index = buildThaiAddressIndex({ provinces, amphures, tambons }, {
+  onSkip: (tambon) => console.warn('skipped', tambon.name_th),
+})
+```
+
+`onSkip` เป็น callback ที่รับตำบลที่ถูกข้ามเพราะหา `amphure_id` ที่อ้างถึงไม่เจอ (ไม่ว่าจะไม่มีอยู่จริงหรือถูก soft-delete ไปแล้ว) — ใช้ดักจับข้อมูลที่ผิดปกติตอน build ได้
+
+## การ validate
+
+ค่าเริ่มต้นของ `options.validate` คือ `true` — ทุกครั้งที่เรียก `buildThaiAddressIndex` จะรัน validation ตรวจ type ของแต่ละ field ก่อนสร้าง index จริง วัดผลแล้วไม่มีผลกระทบด้าน performance ที่สังเกตได้แม้กับข้อมูลเต็มชุด จึงแนะนำให้เปิดไว้เสมอสำหรับข้อมูลที่คุณสร้างเอง (ปิดได้ด้วย `validate: false` ถ้ามั่นใจว่าข้อมูลผ่านการตรวจสอบมาแล้ว)
+
+ถ้าต้องการตรวจสอบข้อมูลแยกต่างหากจากขั้นตอนสร้าง index — เช่นตอน build pipeline ก่อน deploy — เรียก `validateRawData(data)` ได้โดยตรง ฟังก์ชันนี้โยน `TypeError` ที่ระบุตาราง, `id` ของแถวที่ผิด, field ที่ผิด และ type ที่พบจริง ทันทีที่เจอ field แรกที่ไม่ตรงตามที่คาดไว้

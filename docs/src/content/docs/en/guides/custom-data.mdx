@@ -1,0 +1,35 @@
+---
+title: Custom Data
+description: Build an index from your own data with buildThaiAddressIndex instead of the bundled default dataset
+---
+
+The library ships the full national dataset via `thaizip/data`, but sometimes you'll want to build an index from your own data instead — you have a newer government dataset than the one bundled, you only need a private subset (a handful of provinces, say), or you want extra fields attached to your own records.
+
+## The `RawData` shape
+
+`buildThaiAddressIndex` takes an object with four tables, using snake_case fields that mirror the source government data:
+
+- `geographies` — the region table. It's optional and entirely unused by `buildThaiAddressIndex`; it's there in case a caller wants to hold onto it for their own purposes.
+- `provinces` — `id`, `name_th`, `name_en`, `geography_id`, `deleted_at`
+- `amphures` — `id`, `name_th`, `name_en`, `province_id`, `deleted_at`
+- `tambons` — `id`, `zip_code`, `name_th`, `name_en`, `amphure_id`, `deleted_at`
+
+`deleted_at` is a soft-delete marker — either a date string or `null`. Rows where `deleted_at` is not `null` are skipped when the index is built, and any tambon pointing at an `amphure_id` that doesn't exist or has itself been deleted is skipped too.
+
+## Example
+
+```ts
+import { buildThaiAddressIndex, validateRawData } from 'thaizip'
+
+const index = buildThaiAddressIndex({ provinces, amphures, tambons }, {
+  onSkip: (tambon) => console.warn('skipped', tambon.name_th),
+})
+```
+
+`onSkip` is a callback that receives each tambon skipped because its `amphure_id` couldn't be resolved — whether that's because it doesn't exist at all or was soft-deleted. It's a good way to catch bad data during a build.
+
+## Validation
+
+`options.validate` defaults to `true` — every call to `buildThaiAddressIndex` runs type-checking validation on each field before building the index. Measured against the full dataset it has no detectable performance cost, so it's worth leaving on for any data you didn't generate yourself (turn it off with `validate: false` once you're confident the data's already been checked).
+
+If you want to validate data separately from building the index — for example as a build-pipeline step before deploying — call `validateRawData(data)` directly. It throws a `TypeError` naming the table, the offending row's `id`, the field, and the actual type found, as soon as it hits the first field that doesn't match what's expected.

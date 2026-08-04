@@ -34,6 +34,8 @@ export default defineConfig({
             { slug: 'guides/zip-lookup' },
             { slug: 'guides/cascade' },
             { slug: 'guides/english-input' },
+            { slug: 'guides/react' },
+            { slug: 'guides/custom-data' },
           ],
         },
       ],

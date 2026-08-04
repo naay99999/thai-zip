@@ -1,0 +1,67 @@
+---
+title: React Hook
+description: useThaiAddressAutocomplete จาก thaizip/react — debounce, state, และ API ที่ได้คืนมา
+---
+
+import HookDemo from '../../../components/demos/HookDemo'
+
+`thaizip/react` มี hook ชื่อ `useThaiAddressAutocomplete` ให้ ครอบการค้นหา (`searchThaiAddress`) พร้อม debounce 200ms และจัดการ state ของ query/suggestions ให้เสร็จสรรพ `react`/`react-dom` เป็น peer dependency แบบ optional และไฟล์ที่ build ออกมาแนบ `"use client"` มาให้แล้ว จึงใช้ได้ใน Next.js App Router ได้เลยโดยไม่ต้องห่อ wrapper เพิ่ม
+
+ลองพิมพ์ในช่องด้านล่าง แล้วคลิกเลือกผลลัพธ์ — ค่าที่เลือกจะถูกส่งกลับผ่าน `onSelect` เป็นออบเจ็กต์ `ResolvedThaiAddress`:
+
+<HookDemo client:visible />
+
+## ตัวอย่างแบบไม่ตกแต่ง style
+
+นี่คือ component ที่ demo ด้านบนใช้จริง (ตัดส่วน loading/error ของ index ออก) — เรียก hook แล้ว render input กับ `<ul>` ของผลลัพธ์แบบดิบ ๆ:
+
+```tsx
+import { useState } from 'react'
+import { useThaiAddressAutocomplete } from 'thaizip/react'
+import type { ResolvedThaiAddress, TrigramIndex } from 'thaizip'
+
+function AddressAutocomplete({ index }: { index: TrigramIndex }) {
+  const [selected, setSelected] = useState<ResolvedThaiAddress | null>(null)
+  const { query, setQuery, setQuerySilent, suggestions, isOpen, selectSuggestion } =
+    useThaiAddressAutocomplete({ index, onSelect: setSelected })
+
+  return (
+    <div>
+      <input value={query} onChange={(e) => setQuery(e.target.value)} />
+      {isOpen && (
+        <ul>
+          {suggestions.map((s) => (
+            <li
+              key={s.id}
+              onClick={() => {
+                const resolved = selectSuggestion(s)
+                if (resolved) setQuerySilent(s.label)
+              }}
+            >
+              {s.label} ({s.zipCode})
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+```
+
+หมายเหตุ: `useThaiAddressAutocomplete` ต้องได้ `index` ที่ไม่เป็น `null` ในตัวเลือก และ hook เรียกแบบมีเงื่อนไขไม่ได้ — ถ้า index ของคุณโหลดแบบ async (เช่นผ่าน `loadDefaultIndex()`) ให้แยก component ชั้นนอกที่รอ index พร้อมก่อน แล้วค่อย render component ชั้นในที่เรียก hook จริง เหมือนที่ `HookDemo` ทำ
+
+## ค่าที่ hook คืนกลับมา
+
+| ค่า | ความหมาย |
+|---|---|
+| `query` | ข้อความในช่องค้นหาปัจจุบัน |
+| `setQuery` | ตั้งค่า query ใหม่ — จะ trigger การค้นหาแบบ debounce |
+| `setQuerySilent` | ตั้งค่า query โดย**ไม่**ค้นหาซ้ำและไม่เปิด dropdown ใหม่ — ใช้ตอนเอา label ที่เลือกแล้วมาแสดงในช่อง input |
+| `suggestions` | อาเรย์ `ThaiAddressSuggestion[]` จากการค้นหาล่าสุด |
+| `isOpen` | `query.length > 0 && suggestions.length > 0` — ใช้ตัดสินใจว่าจะแสดง dropdown หรือไม่ |
+| `selectSuggestion` | รับ suggestion (จาก `suggestions`) ทั้งก้อน แล้วคืนค่า `ResolvedThaiAddress` โดย lookup ด้วย `id` ของมันแบบ O(1) ภายใน และยิง `onSelect`; ถ้า `id` ไม่รู้จักหรือค้างจาก suggestions ชุดก่อน จะคืนค่า `null` โดยไม่โยน exception — และจะ**ไม่**แก้ `query` ให้เอง (ออกแบบมาให้เรียก `setQuerySilent` เองถ้าต้องการ echo label กลับเข้าช่อง) |
+| `clear` | รีเซ็ต `query` และ `suggestions` กลับเป็นค่าว่าง |
+
+:::tip
+อยากได้ component สำเร็จรูปแบบ shadcn (Base UI + Tailwind)? ดู [react-thaizip](https://github.com/naay99999/react-thai-zip)
+:::
