@@ -33,5 +33,5 @@ Thumbs.db
 .aider*
 .continue/
 
-# docs
-/docs
+# Astro (docs site)
+.astro/
