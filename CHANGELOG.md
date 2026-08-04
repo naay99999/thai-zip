@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.0](https://github.com/naay99999/thai-zip/compare/thaizip-v0.6.0...thaizip-v0.7.0) (2026-08-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* selectSuggestion returns ResolvedThaiAddress | null instead of throwing on an unknown suggestion id. SearchOptions.zipLimit defaults to Infinity, so all-digit queries can now return more rows than `limit`. TrigramIndex gained required fields (normTambon, normTambonEn, byProvince, byAmphure) and ThaiAddressSuggestion gained labelTh/labelEn, which affects callers that construct either type by hand.
+
+### Features
+
+* rank exact matches first, unlimited zip lookup, English aliases, cascade API ([ac36212](https://github.com/naay99999/thai-zip/commit/ac3621210b79785b631ede13bf50a95b9e30b2c5))
+
 ## [0.6.0](https://github.com/naay99999/thai-zip/compare/thaizip-v0.5.1...thaizip-v0.6.0) (2026-06-30)
 
 
