@@ -21,7 +21,7 @@ export async function loadDefaultIndex(): Promise<TrigramIndex> {
         provinces: p.map(([id, name_th, name_en]) => ({ id, name_th, name_en, geography_id: 0, deleted_at: null })),
         amphures: a.map(([id, name_th, name_en, province_id]) => ({ id, name_th, name_en, province_id, deleted_at: null })),
         tambons: t.map(([id, name_th, name_en, amphure_id, zip_code]) => ({ id, name_th, name_en, amphure_id, zip_code, deleted_at: null })),
-      })
+      }, { validate: false })
       // Only commit to cache if clearDefaultIndex() wasn't called while in flight
       if (loadGeneration === gen) {
         cached = index

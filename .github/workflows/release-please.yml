@@ -25,6 +25,12 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
+    # Narrower than the workflow-level grant: this job only builds and publishes,
+    # it never writes to the repo or to pull requests. Keeping it read-only limits
+    # what a compromised build-time dependency could do with GITHUB_TOKEN.
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -36,6 +42,8 @@ jobs:
       - run: npm ci
       - run: npm run generate-data
       - run: npm run build
-      - run: npm publish
+      # --provenance (with id-token: write above) lets consumers verify the
+      # published tarball was built by this workflow from this commit.
+      - run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
