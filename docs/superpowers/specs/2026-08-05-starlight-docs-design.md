@@ -92,7 +92,7 @@ sidebar i18n). Content sources: README.md and CLAUDE.md already cover most mater
 | `ZipDemo` | guides/zip-lookup | Numeric input, shows `lookupByZipCode` results + count of matched tambons |
 | `CascadeDemo` | guides/cascade | Three selects province → amphure → tambon, shows resulting zipCode |
 | `HookDemo` | guides/react | Uses `useThaiAddressAutocomplete` for real; unstyled; renders the `ResolvedThaiAddress` from `onSelect` as JSON |
-| `Playground` | playground | Combines search + zip with an options panel: `threshold` (slider), `limit`, `zipLimit`, `locale`, `romanizationAliases` (toggle); results display per-record `score` to make threshold effects visible |
+| `Playground` | playground | Combines search + zip with an options panel: `threshold` (slider), `limit`, `zipLimit`, `locale`, `romanizationAliases` (toggle); shows result count + elapsed ms to make threshold effects visible (per-record scores are not exposed by the public API) |
 
 ## CI / Deploy
 
