@@ -36,6 +36,7 @@ export default defineConfig({
             { slug: 'guides/english-input' },
             { slug: 'guides/react' },
             { slug: 'guides/custom-data' },
+            { slug: 'playground' },
           ],
         },
       ],

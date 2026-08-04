@@ -1,0 +1,16 @@
+---
+title: Playground
+description: ทดลองปรับตัวเลือกทั้งหมดของ searchThaiAddress แล้วดูผลลัพธ์แบบสด ๆ
+---
+
+import Playground from '../../components/demos/Playground'
+
+ปรับ option แล้วดูผลทันที — เช่น ลด `threshold` เพื่อรับผลลัพธ์ที่ fuzzy ขึ้น, ปิด `romanizationAliases` แล้วลองพิมพ์ `lardprao`, หรือลองรหัส `45000` เพื่อดูผลของ `zipLimit`:
+
+<Playground client:visible />
+
+## ลองทำเอง
+
+- ลาก `threshold` ลงต่ำ ๆ แล้วสังเกตจำนวนผลลัพธ์ที่เพิ่มขึ้น — คะแนนขั้นต่ำที่ต่ำลงทำให้ query กว้าง ๆ จับ match ได้ง่ายขึ้น
+- ปิด `romanizationAliases` แล้วพิมพ์ `lardprao` — ผลลัพธ์จะหายไปเพราะคำสะกดนี้ไม่ตรงกับ RTGS ในระบบโดยตรง เปิดกลับมาแล้วลองใหม่
+- พิมพ์รหัสไปรษณีย์ `45000` แล้วลองสลับ `zipLimit ไม่จำกัด` เปิด/ปิด เพื่อดูว่าการจำกัดผลลัพธ์ซ่อนตำบลที่ถูกต้องไปกี่รายการ
