@@ -29,7 +29,11 @@ export default defineConfig({
         {
           label: 'คู่มือ',
           translations: { en: 'Guides' },
-          items: [{ slug: 'guides/search' }, { slug: 'guides/english-input' }],
+          items: [
+            { slug: 'guides/search' },
+            { slug: 'guides/zip-lookup' },
+            { slug: 'guides/english-input' },
+          ],
         },
       ],
     }),

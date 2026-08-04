@@ -1,0 +1,29 @@
+---
+title: Postal Code Lookup
+description: How postal-code search behaves, and why zipLimit is unlimited by default
+---
+
+import ZipDemo from '../../../../components/demos/ZipDemo'
+
+Try typing a postal code below — the default, `45000`, covers 33 subdistricts:
+
+<ZipDemo client:visible locale="en" />
+
+## Behavior
+
+When a query is all digits and at least 2 digits long, `searchThaiAddress` routes it to postal-code lookup automatically — no separate call needed. To call it directly, use `lookupByZipCode(index, zip)`.
+
+Results always put exact code matches first, followed by prefix matches, sorted by ascending code.
+
+## Why `zipLimit` is unlimited
+
+A single postal code can cover many subdistricts — `45000` covers 33 of them, and out of the 953 postal codes in the dataset, 230 cover more than 10 subdistricts each.
+
+If `zipLimit` were capped at the text-search `limit` (10 by default), a large number of valid subdistricts would be silently hidden. That's why the demo above defaults to `45000` — so this is visible the moment the page loads.
+
+```ts
+import { lookupByZipCode } from 'thaizip'
+
+lookupByZipCode(index, '45000') // exact
+lookupByZipCode(index, '450')   // prefix scan
+```
