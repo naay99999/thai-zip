@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { buildThaiAddressIndex } from '../core/indexer'
-import { searchThaiAddress } from '../core/search'
+import { searchThaiAddress, lookupByZipCode } from '../core/search'
 import type { RawData, TrigramIndex } from '../types'
 
 const mockData: RawData = {
@@ -161,5 +161,41 @@ describe('searchThaiAddress', () => {
 
   it('returns empty for two-char English query', () => {
     expect(searchThaiAddress(index, 'ba')).toHaveLength(0)
+  })
+
+  // S-5: bound the raw query before the (multi-pass) normalizer runs over it
+  it('returns empty array for query longer than 1000 characters', () => {
+    expect(searchThaiAddress(index, 'ก'.repeat(1001))).toHaveLength(0)
+  })
+
+  // UC-1: a tambon whose own name matches the query exactly must outrank a
+  // tambon that only matches via its parent amphure's name. mockData's
+  // จรเข้บัว is in เขตลาดพร้าว (amphure "ลาดพร้าว"), so an unranked flat
+  // trigram search ties it with the actual ลาดพร้าว tambon.
+  it('ranks exact tambon name match above a same-scoring parent-only match', () => {
+    const results = searchThaiAddress(index, 'ลาดพร้าว')
+    expect(results[0].tambonNameTh).toBe('ลาดพร้าว')
+  })
+
+  describe('lookupByZipCode', () => {
+    it('returns all matches for a zip prefix, not capped by the text limit', () => {
+      const results = lookupByZipCode(index, '50')
+      expect(results.length).toBe(2)
+    })
+
+    it('respects zipLimit', () => {
+      const results = lookupByZipCode(index, '50', { zipLimit: 1 })
+      expect(results).toHaveLength(1)
+    })
+
+    it('returns empty array for empty index or zip', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect(lookupByZipCode(null as any, '10900')).toHaveLength(0)
+      expect(lookupByZipCode(index, '')).toHaveLength(0)
+    })
+
+    it('returns empty array for single-digit zip', () => {
+      expect(lookupByZipCode(index, '1')).toHaveLength(0)
+    })
   })
 })

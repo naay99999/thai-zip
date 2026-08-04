@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { buildThaiAddressIndex } from '../core/indexer'
+import { buildThaiAddressIndex, validateRawData } from '../core/indexer'
 import type { RawData } from '../types'
 
 const mockData: RawData = {
@@ -94,5 +94,116 @@ describe('buildThaiAddressIndex', () => {
     const onSkip = vi.fn()
     buildThaiAddressIndex(mockData, { onSkip })
     expect(onSkip).not.toHaveBeenCalled()
+  })
+})
+
+describe('validateRawData', () => {
+  it('accepts valid data without throwing', () => {
+    expect(() => validateRawData(mockData)).not.toThrow()
+  })
+
+  it('rejects a province with non-number id', () => {
+    const data: RawData = {
+      provinces: [{ id: '1' as unknown as number, name_th: 'x', name_en: 'x', geography_id: 1, deleted_at: null }],
+      amphures: [],
+      tambons: [],
+    }
+    expect(() => validateRawData(data)).toThrow(/\[thaizip\] province 1: expected number for id, got string/)
+  })
+
+  it('rejects a province with non-string name_th', () => {
+    const data: RawData = {
+      provinces: [{ id: 1, name_th: 12345 as unknown as string, name_en: 'x', geography_id: 1, deleted_at: null }],
+      amphures: [],
+      tambons: [],
+    }
+    expect(() => validateRawData(data)).toThrow(/\[thaizip\] province 1: expected string for name_th, got number/)
+  })
+
+  it('rejects a province with non-string name_en', () => {
+    const data: RawData = {
+      provinces: [{ id: 1, name_th: 'x', name_en: undefined as unknown as string, geography_id: 1, deleted_at: null }],
+      amphures: [],
+      tambons: [],
+    }
+    expect(() => validateRawData(data)).toThrow(/\[thaizip\] province 1: expected string for name_en, got undefined/)
+  })
+
+  it('rejects an amphure with non-number province_id', () => {
+    const data: RawData = {
+      provinces: mockData.provinces,
+      amphures: [{ id: 1001, name_th: 'x', name_en: 'x', province_id: 'bkk' as unknown as number, deleted_at: null }],
+      tambons: [],
+    }
+    expect(() => validateRawData(data)).toThrow(/\[thaizip\] amphure 1001: expected number for province_id, got string/)
+  })
+
+  it('rejects a tambon with non-string name_th', () => {
+    const data: RawData = {
+      provinces: mockData.provinces,
+      amphures: mockData.amphures,
+      tambons: [{ id: 100404, zip_code: 10900, name_th: 12345 as unknown as string, name_en: 'x', amphure_id: 1001, deleted_at: null }],
+    }
+    expect(() => validateRawData(data)).toThrow('[thaizip] tambon 100404: expected string for name_th, got number')
+  })
+
+  it('rejects a tambon with invalid zip_code type', () => {
+    const data: RawData = {
+      provinces: mockData.provinces,
+      amphures: mockData.amphures,
+      tambons: [{ id: 100404, zip_code: true as unknown as number, name_th: 'x', name_en: 'x', amphure_id: 1001, deleted_at: null }],
+    }
+    expect(() => validateRawData(data)).toThrow(/\[thaizip\] tambon 100404: expected string or number for zip_code, got boolean/)
+  })
+
+  it('accepts a tambon with numeric zip_code', () => {
+    const data: RawData = {
+      provinces: mockData.provinces,
+      amphures: mockData.amphures,
+      tambons: [{ id: 100404, zip_code: 10900, name_th: 'x', name_en: 'x', amphure_id: 1001, deleted_at: null }],
+    }
+    expect(() => validateRawData(data)).not.toThrow()
+  })
+
+  it('rejects a tambon with non-number amphure_id', () => {
+    const data: RawData = {
+      provinces: mockData.provinces,
+      amphures: mockData.amphures,
+      tambons: [{ id: 100404, zip_code: 10900, name_th: 'x', name_en: 'x', amphure_id: '1001' as unknown as number, deleted_at: null }],
+    }
+    expect(() => validateRawData(data)).toThrow(/\[thaizip\] tambon 100404: expected number for amphure_id, got string/)
+  })
+})
+
+describe('buildThaiAddressIndex validation integration', () => {
+  // name_th/name_en being a truthy non-string crashes deep inside the normalizer
+  // (`input.trim is not a function`) regardless of the `validate` option, since
+  // normalization always runs during indexing (see S-4 in the audit report).
+  // zip_code, by contrast, only ever flows through `String(...)`, so an invalid
+  // zip_code type is a case validation alone catches, cleanly demonstrating the
+  // opt-out: building still succeeds (just with a stringified bad value) when
+  // `validate: false` is passed.
+  const badData: RawData = {
+    provinces: mockData.provinces,
+    amphures: mockData.amphures,
+    tambons: [{ id: 100404, zip_code: true as unknown as number, name_th: 'x', name_en: 'x', amphure_id: 1001, deleted_at: null }],
+  }
+
+  it('throws by default when data has a bad field type', () => {
+    expect(() => buildThaiAddressIndex(badData)).toThrow(TypeError)
+    expect(() => buildThaiAddressIndex(badData)).toThrow(/\[thaizip\]/)
+  })
+
+  it('throws when validate: true is explicit', () => {
+    expect(() => buildThaiAddressIndex(badData, { validate: true })).toThrow(TypeError)
+  })
+
+  it('does not throw when validate: false is passed, even with bad data', () => {
+    expect(() => buildThaiAddressIndex(badData, { validate: false })).not.toThrow()
+  })
+
+  it('still builds a usable index when validation is skipped on bad data', () => {
+    const index = buildThaiAddressIndex(badData, { validate: false })
+    expect(index.records).toHaveLength(1)
   })
 })
