@@ -1,252 +1,162 @@
 # thaizip
 
-Fast fuzzy autocomplete for Thai addresses — subdistrict, district, province, and postal code. Supports Thai names, English names, and zip code search. No dependencies except an optional React peer.
-
-## Install
+Fast fuzzy autocomplete for Thai addresses — subdistrict, district, province, postal code. Thai and English input, zero runtime dependencies, React optional.
 
 ```bash
 npm install thaizip
 ```
 
-## Package exports
-
 | import path | contents |
 |---|---|
-| `thaizip` | core functions + types (no React code) |
-| `thaizip/react` | `useThaiAddressAutocomplete` hook + types (ships `"use client"`) |
-| `thaizip/data` | `loadDefaultIndex`, `clearDefaultIndex` |
+| `thaizip` | core functions + types (no React code, 4.4 KB gzip) |
+| `thaizip/react` | `useThaiAddressAutocomplete` (ships `"use client"`) |
+| `thaizip/data` | `loadDefaultIndex`, `clearDefaultIndex` (132 KB gzip) |
 
-## Vanilla JS / TypeScript
+## Quick start
 
 ```ts
 import { loadDefaultIndex } from 'thaizip/data'
 import { searchThaiAddress, formatThaiAddressSuggestion, resolveThaiAddress } from 'thaizip'
 
-const index = await loadDefaultIndex() // ~40ms of synchronous work on first call, cached after
+const index = await loadDefaultIndex() // ~40ms of synchronous work, cached after
 
-const results = searchThaiAddress(index, 'ลาดพร้าว')
-const results2 = searchThaiAddress(index, 'chiang mai')
-const results3 = searchThaiAddress(index, '10900')
+searchThaiAddress(index, 'ลาดพร้าว')
+searchThaiAddress(index, 'bang rak')
+searchThaiAddress(index, '10500')
 
-// For dropdown display
-const suggestion = formatThaiAddressSuggestion(results[0])
-// label:   'ลาดพร้าว > เขตลาดพร้าว > กรุงเทพมหานคร 10230'
-// labelTh: same as above — always present
-// labelEn: 'Lat Phrao > Khet Lat Phrao > Bangkok 10230' — always present
-
-// English-facing UI: pick the locale for `label`
-const en = formatThaiAddressSuggestion(results[0], { locale: 'en' })
-
-// For saving after user selects
-const resolved = resolveThaiAddress(results[0])
-// { tambon, tambonEn, amphure, amphureEn, province, provinceEn, zipCode, subdistrict, district, postalCode, ... }
+formatThaiAddressSuggestion(record)                  // for the dropdown
+formatThaiAddressSuggestion(record, { locale: 'en' })
+resolveThaiAddress(record)                           // for saving
 ```
 
-`searchThaiAddress` options (all optional):
+Call `loadDefaultIndex()` at mount or route load — deferring it to the user's first keystroke costs ~2 dropped frames.
+
+## Search
 
 ```ts
 searchThaiAddress(index, query, {
-  limit: 10,                 // default: 10 — applies to text queries
-  threshold: 0.4,            // match quality 0–1, default: 0.4
-  zipLimit: Infinity,        // default: unlimited — see "Postal code lookup"
-  romanizationAliases: true, // default: true — see "English / romanized queries"
+  limit: 10,                 // text queries only
+  threshold: 0.4,            // match quality 0–1
+  zipLimit: Infinity,        // all-digit queries — unlimited by default
+  romanizationAliases: true, // expand non-RTGS spellings
 })
 ```
 
-Results are ranked by trigram score, then by how well the query matches the subdistrict's **own** name (exact → prefix → substring), then alphabetically. That second key matters: without it a subdistrict that merely sits *inside* เขตลาดพร้าว outranks ตำบลลาดพร้าว itself.
+Results rank by trigram score, then by how well the query matches the subdistrict's **own** name (exact → prefix → substring), then alphabetically. That second key is what keeps ตำบลลาดพร้าว above the other subdistricts that merely sit inside เขตลาดพร้าว.
 
-> Searching a combined text + zip code in one query (e.g. `"ลาดพร้าว 10900"`) is not supported — search by name or zip code separately.
+> Combined text + zip in one query (`"ลาดพร้าว 10900"`) is not supported — search by name or zip separately.
 
-## Postal code lookup
+### Postal codes
 
-A single Thai postal code can cover many subdistricts — `45000` covers 33 of them, and 230 of the 953 codes cover more than 10. `zipLimit` therefore defaults to unlimited so a zip search never silently hides valid subdistricts:
+One Thai postal code can cover many subdistricts — `45000` covers 33, and 230 of the 953 codes cover more than 10 — so `zipLimit` defaults to unlimited rather than silently truncating at `limit`.
 
 ```ts
-searchThaiAddress(index, '45000')                 // all 33
-searchThaiAddress(index, '45000', { zipLimit: 5 }) // cap it yourself if your UI needs to
-
-// Or use the dedicated helper — exact + prefix match, unlimited by default:
 import { lookupByZipCode } from 'thaizip'
-lookupByZipCode(index, '45000')
-lookupByZipCode(index, '450')     // prefix search
+
+lookupByZipCode(index, '45000') // exact
+lookupByZipCode(index, '450')   // prefix
 ```
 
-## English / romanized queries
+### English input
 
-The dataset indexes the official RTGS transliteration, so `bang rak` and `chatuchak` work out of the box. Common non-RTGS spellings people actually type are mapped onto their RTGS form first:
+The dataset indexes official RTGS spellings, so `bang rak` and `chatuchak` work directly. 84 common non-RTGS spellings are mapped on first: `lardprao` → `lat phrao`, `ladkrabang` → `lat krabang`, `krungthep` → `bangkok`. It is a curated dictionary, not a transliterator — unlisted spellings still miss. Opt out with `romanizationAliases: false`.
 
-```ts
-searchThaiAddress(index, 'lardprao')   // → ลาดพร้าว   (alias for 'lat phrao')
-searchThaiAddress(index, 'ladkrabang') // → ลาดกระบัง  (alias for 'lat krabang')
-searchThaiAddress(index, 'krungthep')  // → Bangkok records
-
-// Opt out if you want strict RTGS-only matching:
-searchThaiAddress(index, 'lardprao', { romanizationAliases: false }) // → []
-```
-
-The alias table covers Bangkok's 50 districts and the major provinces. It is a curated dictionary, not a general transliterator — an unlisted spelling still misses.
-
-## Cascade dropdowns (province → district → subdistrict)
+### Cascade dropdowns
 
 ```ts
 import { listProvinces, listAmphures, listTambons } from 'thaizip'
 
-listProvinces(index)                 // 77 provinces, sorted by Thai name
-listAmphures(index, provinceId)      // districts of that province
-listTambons(index, amphureId)        // subdistricts, each with its zipCode
+listProvinces(index)            // 77, sorted by Thai name
+listAmphures(index, provinceId)
+listTambons(index, amphureId)   // each with its zipCode
 ```
 
-These read pre-built groupings on the index rather than scanning all 7,385 records, so they are cheap enough to call on every dropdown change. An unknown id returns `[]`.
+Backed by pre-built groupings, not scans over all 7,385 records. Unknown ids return `[]`.
 
 ## React
 
 ```tsx
-import { useState, useEffect } from 'react'
-import { loadDefaultIndex } from 'thaizip/data'
 import { useThaiAddressAutocomplete } from 'thaizip/react'
-import type { TrigramIndex, ResolvedThaiAddress } from 'thaizip/react'
 
-function AddressPage() {
-  const [index, setIndex] = useState<TrigramIndex | null>(null)
-  useEffect(() => { loadDefaultIndex().then(setIndex) }, [])
-  if (!index) return <p>Loading…</p>
-  return <AddressForm index={index} />
-}
-
-function AddressForm({ index }: { index: TrigramIndex }) {
-  const { query, setQuery, setQuerySilent, suggestions, isOpen, selectSuggestion, clear } =
-    useThaiAddressAutocomplete({ index, limit: 10, debounce: 200, threshold: 0.4 })
-
-  const [address, setAddress] = useState<ResolvedThaiAddress | null>(null)
-
-  return (
-    <div>
-      <input value={query} onChange={(e) => setQuery(e.target.value)} />
-      {isOpen && (
-        <ul>
-          {suggestions.map((s) => (
-            <li key={s.id} onClick={() => setAddress(selectSuggestion(s))}>
-              {s.label}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
+const { query, setQuery, setQuerySilent, suggestions, isOpen, selectSuggestion, clear } =
+  useThaiAddressAutocomplete({ index })
 ```
 
-Hook return values:
+Options: `index`, `limit`, `debounce` (200ms), `threshold`, `zipLimit`, `locale`, `initialQuery`, `onSelect`.
 
-| value | type | description |
-|---|---|---|
-| `query` | `string` | current input value |
-| `setQuery` | `(v: string) => void` | update query and search |
-| `setQuerySilent` | `(v: string) => void` | update query **without** searching or reopening the dropdown |
-| `suggestions` | `ThaiAddressSuggestion[]` | dropdown items |
-| `isOpen` | `boolean` | `true` when query is non-empty and suggestions exist |
-| `selectSuggestion` | `(item) => ResolvedThaiAddress \| null` | select item, clears suggestions (query stays); `null` if the item is stale |
-| `clear` | `() => void` | reset query and suggestions |
+| value | description |
+|---|---|
+| `query` / `setQuery` | input value; `setQuery` searches |
+| `setQuerySilent` | set the value **without** searching or reopening the dropdown |
+| `suggestions` | `ThaiAddressSuggestion[]` |
+| `isOpen` | `query` is non-empty and suggestions exist |
+| `selectSuggestion` | `(item) => ResolvedThaiAddress \| null` — clears suggestions, leaves `query` alone; `null` if the item is stale |
+| `clear` | reset query and suggestions |
 
-Hook options: `index`, `limit`, `debounce`, `threshold`, `zipLimit`, `locale`, plus `initialQuery` (seed the input without firing a search on mount) and `onSelect` (called with the resolved address after a successful selection).
+### Controlled forms
 
-### Controlled forms (react-hook-form, Formik)
-
-`selectSuggestion` deliberately leaves `query` alone. To echo the chosen address back into the input, use `setQuerySilent` — plain `setQuery` would immediately re-open the dropdown:
+`selectSuggestion` leaves `query` untouched by design. To echo the choice back into the input use `setQuerySilent` — plain `setQuery` would immediately reopen the dropdown:
 
 ```tsx
 const handlePick = (s: ThaiAddressSuggestion) => {
   const address = selectSuggestion(s)
-  if (!address) return          // stale item — safe to ignore, it does not throw
+  if (!address) return
   setQuerySilent(s.label)
   form.setValue('address', address)
 }
 ```
 
-Editing a saved address? Pass `initialQuery` instead of calling `setQuery` in an effect:
-
-```tsx
-useThaiAddressAutocomplete({ index, initialQuery: saved.label, onSelect: (a) => form.setValue('address', a) })
-```
+Editing a saved address? Pass `initialQuery` rather than calling `setQuery` in an effect.
 
 ### Accessibility
 
-The hook is headless: it owns query/suggestion state only. Keyboard navigation and ARIA combobox semantics (`role="combobox"`, `aria-expanded`, `aria-activedescendant`, an accessible name on the input, and a live region announcing the result count) are yours to implement — the minimal example above is deliberately unstyled and is **not** an accessible reference implementation. `npx react-thaizip add autocomplete` scaffolds a component with the keyboard and ARIA wiring already in place.
+The hook owns query and suggestion state only. Keyboard navigation and ARIA combobox semantics are yours — `npx react-thaizip add autocomplete` scaffolds a component that already has them.
 
-## Node.js / Express
+## Custom data
 
 ```ts
-import express from 'express'
-import { loadDefaultIndex } from 'thaizip/data'
-import { searchThaiAddress, formatThaiAddressSuggestion } from 'thaizip'
+import { buildThaiAddressIndex, validateRawData } from 'thaizip'
 
-const app = express()
-const index = await loadDefaultIndex()
-
-app.get('/address/search', (req, res) => {
-  const q = String(req.query.q ?? '')
-  res.json(searchThaiAddress(index, q, { limit: 10 }).map(formatThaiAddressSuggestion))
+const index = buildThaiAddressIndex({ provinces, amphures, tambons }, {
+  onSkip: (tambon) => console.warn('skipped:', tambon.id),
+  validate: true, // default
 })
 ```
 
-## Custom index
+Input is validated by default, so a stray non-string field fails with `[thaizip] tambon 100404: expected string for name_th, got number` instead of crashing inside the normalizer. It costs nothing measurable on a full-size dataset. `validateRawData(data)` runs the same checks standalone.
 
-```ts
-import { buildThaiAddressIndex } from 'thaizip'
-
-const index = buildThaiAddressIndex(
-  { provinces: [...], amphures: [...], tambons: [...] },
-  {
-    onSkip: (tambon) => console.warn('skipped:', tambon.id),
-    validate: true, // default — throws a descriptive TypeError on malformed input
-  }
-)
-```
-
-Raw data shape: `RawData`, `RawProvince`, `RawAmphure`, `RawTambon` — all exported from `thaizip`.
-
-Input is validated by default, so a stray non-string field fails with `[thaizip] tambon 100404: expected string for name_th, got number` instead of crashing deep inside the normalizer. Validation costs nothing measurable on a full-size dataset; pass `validate: false` only if your data is already trusted. You can also check data without building an index:
-
-```ts
-import { validateRawData } from 'thaizip'
-validateRawData({ provinces, amphures, tambons }) // throws on the first bad field
-```
-
-To reset the default index singleton (useful for test isolation):
-
-```ts
-import { clearDefaultIndex } from 'thaizip/data'
-clearDefaultIndex()
-```
+Types: `RawData`, `RawProvince`, `RawAmphure`, `RawTambon`.
 
 ## Types
 
 ```ts
 type ThaiAddressSuggestion = {
   id: string
-  label: string       // "subdistrict > district > province XXXXX", per `locale`
-  labelTh: string     // always the Thai label
-  labelEn: string     // always the English label
-  tambon: string;     tambonEn: string
-  amphure: string;    amphureEn: string
-  province: string;   provinceEn: string
+  label: string      // follows `locale`, Thai by default
+  labelTh: string
+  labelEn: string
+  tambon: string;    tambonEn: string
+  amphure: string;   amphureEn: string
+  province: string;  provinceEn: string
   zipCode: string
 }
 
 type ResolvedThaiAddress = {
-  tambon: string;        tambonEn: string        // alias: subdistrict / subdistrictEn
-  amphure: string;       amphureEn: string       // alias: district / districtEn
-  province: string;      provinceEn: string
-  zipCode: string                                // alias: postalCode
-  subdistrict: string;   subdistrictEn: string
-  district: string;      districtEn: string
+  tambon: string;    tambonEn: string     // alias: subdistrict / subdistrictEn
+  amphure: string;   amphureEn: string    // alias: district / districtEn
+  province: string;  provinceEn: string
+  zipCode: string                         // alias: postalCode
+  subdistrict: string; subdistrictEn: string
+  district: string;    districtEn: string
   postalCode: string
 }
 ```
 
 ## Data
 
-Covers Thailand's administrative divisions: 77 provinces, 918 districts, 7,385 subdistricts. Subdistricts whose parent district or province has been soft-deleted are excluded from the default index automatically.
+77 provinces, 918 districts, 7,385 subdistricts. Records whose parent district or province is soft-deleted are excluded automatically.
+
+`searchThaiAddress` is pure and framework-free — it works unchanged in Node, Vue, Svelte, or vanilla JS.
 
 ## License
 
