@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.0...thaizip-v0.7.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* sync package-lock.json with package.json ([2dcdfc1](https://github.com/naay99999/thai-zip/commit/2dcdfc1043871c94e084ad66bff20a2ae6568def))
+
 ## [0.7.0](https://github.com/naay99999/thai-zip/compare/thaizip-v0.6.0...thaizip-v0.7.0) (2026-08-04)
 
 
