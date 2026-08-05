@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+.astro/
 
 # Coverage
 coverage/
@@ -32,6 +33,3 @@ Thumbs.db
 .copilot/
 .aider*
 .continue/
-
-# docs
-/docs

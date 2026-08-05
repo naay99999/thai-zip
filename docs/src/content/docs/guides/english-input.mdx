@@ -1,0 +1,29 @@
+---
+title: ค้นหาด้วยภาษาอังกฤษ
+description: การสะกดแบบ RTGS ที่ค้นหาได้ทันที และรายการ alias สำหรับคำสะกดที่ไม่ใช่ RTGS
+---
+
+import SearchDemo from '../../../components/demos/SearchDemo'
+
+ลองพิมพ์ชื่อสถานที่เป็นภาษาอังกฤษดู:
+
+<SearchDemo client:visible initialQuery="bang rak" />
+
+## การสะกดแบบ RTGS ใช้ได้ทันที
+
+ข้อมูลในดัชนีเก็บชื่อภาษาอังกฤษไว้ตามระบบถอดเสียงราชบัณฑิตยสถาน (RTGS) อยู่แล้ว คำสะกดแบบ RTGS อย่าง `bang rak` หรือ `chatuchak` จึงค้นหาเจอได้ตรง ๆ โดยไม่ต้องแปลงอะไรเพิ่ม
+
+## alias สำหรับคำสะกดที่ไม่ใช่ RTGS
+
+หลายคนคุ้นกับคำสะกดที่ไม่ใช่ RTGS มาก่อน เช่น `lardprao` หรือ `krungthep` — thaizip มีรายการ alias ที่คัดสรรไว้ 87 รายการ แปลงคำสะกดเหล่านี้ให้ตรงกับชื่อ RTGS จริงในข้อมูลก่อนเริ่มค้นหา เช่น:
+
+- `lardprao` → `lat phrao`
+- `krungthep` → `bangkok`
+
+รายการนี้เป็น**พจนานุกรมที่คัดมาเอง** ไม่ใช่ตัวแปลงเสียงอัตโนมัติ (transliterator) คำสะกดที่ไม่อยู่ในรายการจะยังหาไม่เจอ
+
+ถ้าไม่ต้องการให้มีการแปลงคำสะกดแบบนี้ ปิดได้ด้วย `romanizationAliases: false`:
+
+```ts
+searchThaiAddress(index, 'lardprao', { romanizationAliases: false })
+```

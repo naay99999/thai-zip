@@ -1,0 +1,16 @@
+---
+title: Playground
+description: Try every searchThaiAddress option and see the results live
+---
+
+import Playground from '../../../components/demos/Playground'
+
+Adjust an option and see the effect immediately — lower `threshold` for fuzzier matches, turn off `romanizationAliases` and type `lardprao`, or try postal code `45000` to see what `zipLimit` does:
+
+<Playground client:visible locale="en" />
+
+## Things to try
+
+- Drag `threshold` down and watch the result count grow — a lower minimum score lets looser queries count as matches.
+- Turn off `romanizationAliases` and type `lardprao` — the results disappear because that spelling doesn't match the RTGS form in the dataset directly. Turn it back on and try again.
+- Search postal code `45000` and toggle `unlimited zipLimit` on and off to see how many valid subdistricts get hidden when the result count is capped.

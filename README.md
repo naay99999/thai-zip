@@ -2,6 +2,8 @@
 
 Fast fuzzy autocomplete for Thai addresses — subdistrict, district, province, postal code. Thai and English input, zero runtime dependencies, React optional.
 
+**Docs:** https://naay99999.github.io/thai-zip/ (ไทย / [English](https://naay99999.github.io/thai-zip/en/))
+
 ```bash
 npm install thaizip
 ```
@@ -59,7 +61,7 @@ lookupByZipCode(index, '450')   // prefix
 
 ### English input
 
-The dataset indexes official RTGS spellings, so `bang rak` and `chatuchak` work directly. 84 common non-RTGS spellings are mapped on first: `lardprao` → `lat phrao`, `ladkrabang` → `lat krabang`, `krungthep` → `bangkok`. It is a curated dictionary, not a transliterator — unlisted spellings still miss. Opt out with `romanizationAliases: false`.
+The dataset indexes official RTGS spellings, so `bang rak` and `chatuchak` work directly. 87 common non-RTGS spellings are mapped on first: `lardprao` → `lat phrao`, `ladkrabang` → `lat krabang`, `krungthep` → `bangkok`. It is a curated dictionary, not a transliterator — unlisted spellings still miss. Opt out with `romanizationAliases: false`.
 
 ### Cascade dropdowns
 

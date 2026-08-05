@@ -1,0 +1,34 @@
+---
+title: Dropdown จังหวัด → อำเภอ → ตำบล
+description: API สำหรับสร้าง dropdown แบบลดหลั่นจากจังหวัดไปจนถึงตำบล และรหัสไปรษณีย์
+---
+
+import CascadeDemo from '../../../components/demos/CascadeDemo'
+
+ลองเลือกจังหวัด แล้วเลือกอำเภอ/เขต ตามด้วยตำบล/แขวง — รหัสไปรษณีย์จะโผล่ขึ้นมาเองเมื่อเลือกครบ:
+
+<CascadeDemo client:visible />
+
+## API สำหรับ enumeration
+
+นอกจากการค้นหาแบบพิมพ์ข้อความแล้ว ไลบรารียังมีชุดฟังก์ชันสำหรับสร้าง dropdown แบบลดหลั่น (cascade) — จังหวัด → อำเภอ → ตำบล — โดยไม่ต้องพิมพ์อะไรเลย:
+
+```ts
+import { listProvinces, listAmphures, listTambons } from 'thaizip'
+
+listProvinces(index)            // 77 จังหวัด เรียงตามชื่อไทย
+listAmphures(index, provinceId)
+listTambons(index, amphureId)   // แต่ละรายการมี zipCode ติดมาด้วย
+```
+
+- `listProvinces(index)` คืนค่าจังหวัดทั้ง 77 จังหวัด เรียงตามชื่อภาษาไทย
+- `listAmphures(index, provinceId)` คืนอำเภอ/เขตทั้งหมดในจังหวัดนั้น
+- `listTambons(index, amphureId)` คืนตำบล/แขวงทั้งหมดในอำเภอนั้น พร้อม `zipCode` ของแต่ละรายการ
+
+## ทำไมถึงเร็ว
+
+ฟังก์ชันทั้งสามตัวนี้อ้างอิงจาก grouping (`byProvince` / `byAmphure`) ที่ถูกสร้างไว้ล่วงหน้าตอนสร้าง index ไม่ใช่การไล่สแกนทั้ง 7,385 record ทุกครั้งที่เรียก จึงเรียกได้ถี่ ๆ ในทุกครั้งที่ผู้ใช้เปลี่ยนตัวเลือกโดยไม่กระทบ performance
+
+## กรณี id ที่ไม่รู้จัก
+
+ถ้าเรียก `listAmphures` หรือ `listTambons` ด้วย id ที่ไม่มีอยู่จริง (เช่นค่า `0` ตอนยังไม่ได้เลือก หรือ state ที่ค้างจากตัวเลือกก่อนหน้า) ฟังก์ชันจะคืนค่าอาเรย์ว่าง `[]` เสมอ ไม่โยน exception — ทำให้เขียน UI ที่ต้อง reset ตัวเลือกลูกเมื่อเปลี่ยนตัวเลือกแม่ได้ง่ายและปลอดภัย ดังที่ demo ด้านบนทำ (เลือกจังหวัดใหม่ → รีเซ็ต `amphureId`/`tambonId` กลับเป็น `0`)

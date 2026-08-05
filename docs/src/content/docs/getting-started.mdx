@@ -1,0 +1,55 @@
+---
+title: เริ่มต้นใช้งาน
+description: ติดตั้ง thaizip แล้วค้นหาที่อยู่ไทยแบบ fuzzy ได้ในไม่กี่บรรทัด
+---
+
+`thaizip` เป็นไลบรารีค้นหาที่อยู่ไทยแบบ headless — ไม่มี runtime dependency และไม่ผูกกับเฟรมเวิร์กใด ๆ หน้านี้พาไปตั้งแต่ติดตั้งจนค้นหาได้ผลลัพธ์แรก
+
+## ติดตั้ง
+
+```bash
+npm install thaizip
+```
+
+ต้องใช้ Node.js เวอร์ชัน 18 ขึ้นไป ส่วน React เป็น peer dependency แบบ optional — ใช้เฉพาะถ้าต้องการ hook `useThaiAddressAutocomplete` จาก `thaizip/react` เท่านั้น ไม่ใช้ React ก็เรียกใช้ API หลักได้ตามปกติ
+
+## สาม entry points
+
+แพ็กเกจแบ่งออกเป็นสาม entry points เพื่อให้ import เฉพาะส่วนที่ใช้จริง:
+
+| import path | เนื้อหา |
+|---|---|
+| `thaizip` | ฟังก์ชันและ type หลัก (ไม่มีโค้ด React, 4.4 KB gzip) |
+| `thaizip/react` | `useThaiAddressAutocomplete` (แนบ `"use client"` มาให้) |
+| `thaizip/data` | `loadDefaultIndex`, `clearDefaultIndex` (132 KB gzip) |
+
+`thaizip/data` แยกออกมาต่างหากเพราะเป็นก้อนข้อมูลที่ใหญ่ที่สุด — ตัว bundler ที่รองรับ tree-shaking จะไม่ดึงเข้ามาถ้าไม่ได้ import
+
+## โหลด index แล้วค้นหา
+
+```ts
+import { loadDefaultIndex } from 'thaizip/data'
+import { searchThaiAddress, formatThaiAddressSuggestion, resolveThaiAddress } from 'thaizip'
+
+const index = await loadDefaultIndex() // ~40ms of synchronous work, cached after
+
+searchThaiAddress(index, 'ลาดพร้าว')
+searchThaiAddress(index, 'bang rak')
+searchThaiAddress(index, '10500')
+```
+
+`loadDefaultIndex()` โหลดข้อมูล tambon/amphure/province ทั้งหมดแล้วสร้าง trigram index ในหน่วยความจำ ผลลัพธ์จะถูก cache ไว้เป็น singleton ระดับโมดูล เรียกซ้ำครั้งต่อไปจึงได้ index เดิมกลับมาทันทีโดยไม่ต้องสร้างใหม่
+
+## เคล็ดลับ performance
+
+เรียก `loadDefaultIndex()` ตอน mount คอมโพเนนต์หรือตอนโหลด route ไว้ล่วงหน้า อย่ารอให้ผู้ใช้พิมพ์ตัวอักษรแรกก่อนค่อยเรียก เพราะงานสร้าง index กินเวลาราว 40ms แบบ synchronous บน main thread — ถ้าไปเกิดขึ้นตอนกดคีย์บอร์ดจะรู้สึกได้ถึงเฟรมที่หลุดไปประมาณ 2 เฟรม
+
+## ไปต่อ
+
+- [การค้นหา](../guides/search/) — ตัวเลือกของ `searchThaiAddress`, การจัดอันดับผลลัพธ์, และข้อจำกัด
+- [ค้นหาด้วยรหัสไปรษณีย์](../guides/zip-lookup/) — พฤติกรรมของการค้นหาด้วยรหัสไปรษณีย์ และทำไม `zipLimit` ไม่จำกัดโดยค่าเริ่มต้น
+- [Dropdown จังหวัด → อำเภอ → ตำบล](../guides/cascade/) — API สำหรับสร้าง dropdown แบบลดหลั่นจากจังหวัดไปจนถึงตำบล
+- [ค้นหาด้วยภาษาอังกฤษ](../guides/english-input/) — สะกดแบบ RTGS และรายการ alias ที่รองรับ
+- [React Hook](../guides/react/) — `useThaiAddressAutocomplete` จาก `thaizip/react`
+- [ใช้ข้อมูลของคุณเอง](../guides/custom-data/) — สร้าง index จากข้อมูลของคุณเองด้วย `buildThaiAddressIndex`
+- [Playground](../playground/) — ลองปรับตัวเลือกทั้งหมดของ `searchThaiAddress` แล้วดูผลลัพธ์แบบสด ๆ
