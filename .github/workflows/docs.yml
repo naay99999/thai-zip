@@ -20,8 +20,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: docs-${{ github.ref }}
@@ -30,6 +28,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,7 +46,8 @@ jobs:
       - name: Build docs
         working-directory: docs
         run: |
-          npm ci
+          npm install --no-audit --no-fund
+          npm run check
           npm run build
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'
@@ -57,6 +58,9 @@ jobs:
     if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
