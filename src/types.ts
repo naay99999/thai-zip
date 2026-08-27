@@ -19,6 +19,15 @@ export type TrigramIndex = {
   records: ThaiAddressRecord[]
   zipIndex: Map<string, number[]>
   /**
+   * Zip codes of `zipIndex` in ascending lexical order, with postings
+   * parallel in `sortedZipPostings`. Used by `lookupByZipCode` for
+   * O(log n + matches) prefix lookup instead of scanning every zip code.
+   * Optional: older-shaped or hand-built indexes without these fields fall
+   * back to the O(n_zips) scan.
+   */
+  sortedZipKeys?: string[]
+  sortedZipPostings?: number[][]
+  /**
    * Normalized Thai tambon names, parallel to `records` (same index).
    * Used by the search ranker for exact/prefix match detection without
    * re-normalizing on every query.

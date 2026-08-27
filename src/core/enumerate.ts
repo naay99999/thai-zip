@@ -12,9 +12,11 @@ function byNameTh(a: { nameTh: string }, b: { nameTh: string }): number {
 /**
  * All provinces present in the index, deduplicated and sorted by Thai name.
  * Backed by `index.byProvince` (O(unique provinces)); falls back to scanning
- * `index.records` if an older-shaped index lacks that map.
+ * `index.records` if an older-shaped index lacks that map. A missing/junk
+ * index returns `[]` rather than throwing.
  */
 export function listProvinces(index: TrigramIndex): ProvinceSummary[] {
+  if (!index || !index.records) return []
   const seen = new Map<number, ProvinceSummary>()
 
   if (index.byProvince) {
@@ -38,8 +40,10 @@ export function listProvinces(index: TrigramIndex): ProvinceSummary[] {
  * Amphures (districts) within a given province, deduplicated and sorted by
  * Thai name. Unknown `provinceId` returns `[]`. Backed by `index.byProvince`;
  * falls back to scanning `index.records` if an older-shaped index lacks it.
+ * A missing/junk index returns `[]` rather than throwing.
  */
 export function listAmphures(index: TrigramIndex, provinceId: number): AmphureSummary[] {
+  if (!index || !index.records) return []
   const seen = new Map<number, AmphureSummary>()
 
   const addFrom = (r: ThaiAddressRecord): void => {
@@ -71,9 +75,11 @@ export function listAmphures(index: TrigramIndex, provinceId: number): AmphureSu
  * Unknown `amphureId` returns `[]`. Backed by `index.byAmphure`; falls back
  * to scanning `index.records` if an older-shaped index lacks it. Each
  * `byAmphure` entry already maps to exactly one tambon record, so no
- * deduplication is needed here.
+ * deduplication is needed here. A missing/junk index returns `[]` rather
+ * than throwing.
  */
 export function listTambons(index: TrigramIndex, amphureId: number): TambonSummary[] {
+  if (!index || !index.records) return []
   const toSummary = (r: ThaiAddressRecord): TambonSummary => ({
     id: r.tambonId,
     nameTh: r.tambonNameTh,

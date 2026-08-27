@@ -6,6 +6,11 @@ function typeErr(table: string, id: unknown, field: string, expected: string, va
   return new TypeError(`[thaizip] ${table} ${id}: expected ${expected} for ${field}, got ${typeof value}`)
 }
 
+/** `typeof` that reports `null` as `'null'` instead of `'object'`. */
+function typeName(value: unknown): string {
+  return value === null ? 'null' : typeof value
+}
+
 /**
  * Validate that a `RawData` payload has the runtime shapes `buildThaiAddressIndex`
  * expects. Intended for consumers building an index from their own data (CSV, CMS,
@@ -16,28 +21,64 @@ function typeErr(table: string, id: unknown, field: string, expected: string, va
  * offending record's `id`, the field, and the actual `typeof` on the first bad
  * field found. Does not filter soft-deleted rows first — validates every row as
  * provided.
+ *
+ * IDs must be unique within each table (duplicates throw, they are not silently
+ * discarded — two suggestions sharing an id would resolve to the wrong record).
+ * Referential integrity (amphure→province, tambon→amphure) is intentionally NOT
+ * enforced: dangling references — including soft-deleted parents — are handled at
+ * build time, where the tambon is skipped and reported via `options.onSkip`.
  */
 export function validateRawData(data: RawData): void {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError(`[thaizip] validateRawData expected a RawData object, got ${typeName(data)}`)
+  }
   const { provinces, amphures, tambons } = data
+  if (!Array.isArray(provinces)) {
+    throw new TypeError(`[thaizip] RawData.provinces must be an array, got ${typeName(provinces)}`)
+  }
+  if (!Array.isArray(amphures)) {
+    throw new TypeError(`[thaizip] RawData.amphures must be an array, got ${typeName(amphures)}`)
+  }
+  if (!Array.isArray(tambons)) {
+    throw new TypeError(`[thaizip] RawData.tambons must be an array, got ${typeName(tambons)}`)
+  }
 
+  const seenProvinceIds = new Set<number>()
   for (let i = 0; i < provinces.length; i++) {
     const p = provinces[i]
+    if (p === null || typeof p !== 'object') {
+      throw new TypeError(`[thaizip] province[${i}]: expected object, got ${typeName(p)}`)
+    }
     if (typeof p.id !== 'number') throw typeErr('province', p.id, 'id', 'number', p.id)
+    if (seenProvinceIds.has(p.id)) throw new TypeError(`[thaizip] duplicate province id: ${p.id}`)
+    seenProvinceIds.add(p.id)
     if (typeof p.name_th !== 'string') throw typeErr('province', p.id, 'name_th', 'string', p.name_th)
     if (typeof p.name_en !== 'string') throw typeErr('province', p.id, 'name_en', 'string', p.name_en)
   }
 
+  const seenAmphureIds = new Set<number>()
   for (let i = 0; i < amphures.length; i++) {
     const a = amphures[i]
+    if (a === null || typeof a !== 'object') {
+      throw new TypeError(`[thaizip] amphure[${i}]: expected object, got ${typeName(a)}`)
+    }
     if (typeof a.id !== 'number') throw typeErr('amphure', a.id, 'id', 'number', a.id)
+    if (seenAmphureIds.has(a.id)) throw new TypeError(`[thaizip] duplicate amphure id: ${a.id}`)
+    seenAmphureIds.add(a.id)
     if (typeof a.name_th !== 'string') throw typeErr('amphure', a.id, 'name_th', 'string', a.name_th)
     if (typeof a.name_en !== 'string') throw typeErr('amphure', a.id, 'name_en', 'string', a.name_en)
     if (typeof a.province_id !== 'number') throw typeErr('amphure', a.id, 'province_id', 'number', a.province_id)
   }
 
+  const seenTambonIds = new Set<number>()
   for (let i = 0; i < tambons.length; i++) {
     const t = tambons[i]
+    if (t === null || typeof t !== 'object') {
+      throw new TypeError(`[thaizip] tambon[${i}]: expected object, got ${typeName(t)}`)
+    }
     if (typeof t.id !== 'number') throw typeErr('tambon', t.id, 'id', 'number', t.id)
+    if (seenTambonIds.has(t.id)) throw new TypeError(`[thaizip] duplicate tambon id: ${t.id}`)
+    seenTambonIds.add(t.id)
     if (typeof t.name_th !== 'string') throw typeErr('tambon', t.id, 'name_th', 'string', t.name_th)
     if (typeof t.name_en !== 'string') throw typeErr('tambon', t.id, 'name_en', 'string', t.name_en)
     const zipType = typeof t.zip_code
@@ -158,5 +199,10 @@ export function buildThaiAddressIndex(data: RawData, options?: BuildIndexOptions
     addTrigrams(map, ampTrigrams.get(amphure.id)!, idx)
   }
 
-  return { map, records, zipIndex, normTambon, normTambonEn, byProvince, byAmphure }
+  // Ascending zip keys + parallel postings, for O(log n) prefix lookup.
+  // Sorting 953 keys costs a fraction of a millisecond at build time.
+  const sortedZipKeys = [...zipIndex.keys()].sort()
+  const sortedZipPostings = sortedZipKeys.map(z => zipIndex.get(z)!)
+
+  return { map, records, zipIndex, sortedZipKeys, sortedZipPostings, normTambon, normTambonEn, byProvince, byAmphure }
 }

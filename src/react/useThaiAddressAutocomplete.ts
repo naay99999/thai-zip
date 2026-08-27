@@ -54,19 +54,14 @@ export function useThaiAddressAutocomplete(options: UseThaiAddressAutocompleteOp
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const matchedRecordsMapRef = useRef<Map<string, ThaiAddressRecord>>(new Map())
 
-  // When true, the next run of the debounced query effect is skipped once, then
-  // the flag resets so the following real keystroke searches normally. Set by
-  // `setQuerySilent` and by the initial-query seed so neither triggers a
-  // spurious search / dropdown open.
-  const suppressNextSearchRef = useRef(initialQuery.length > 0)
-
-  // Both search effects run together on mount (React runs every effect on the
-  // first commit regardless of deps). `suppressNextSearchRef` is only consumed
-  // once (by whichever effect runs first), so the `[index]` effect additionally
-  // no-ops on its very first run — otherwise an `initialQuery` would still fire
-  // one immediate synchronous search via this effect even though the debounced
-  // effect above correctly skipped its own.
-  const isFirstIndexEffectRunRef = useRef(true)
+  // Value-based search suppression. Holds the query string that must NOT be
+  // searched (the `initialQuery` seed, or the value passed to
+  // `setQuerySilent`). Searching stays suppressed while the query is
+  // unchanged; the first genuinely different query clears it and searches
+  // normally. Unlike a one-shot boolean, this survives React StrictMode's
+  // double effect pass and an index that arrives asynchronously after mount —
+  // neither may search the seeded value.
+  const suppressedQueryRef = useRef(initialQuery)
 
   const runSearch = useCallback(
     (q: string, idx: typeof index) => {
@@ -92,10 +87,12 @@ export function useThaiAddressAutocomplete(options: UseThaiAddressAutocompleteOp
       return
     }
 
-    if (suppressNextSearchRef.current) {
-      suppressNextSearchRef.current = false
-      return
-    }
+    // The seeded/silent value itself must not open the dropdown. Suppression
+    // is value-based (see `suppressedQueryRef`), so this is idempotent across
+    // StrictMode's double effect pass. Once the query genuinely differs, drop
+    // the suppression — everything after that behaves like a normal keystroke.
+    if (query === suppressedQueryRef.current) return
+    suppressedQueryRef.current = ''
 
     timerRef.current = setTimeout(() => {
       runSearch(query, indexRef.current)
@@ -110,17 +107,11 @@ export function useThaiAddressAutocomplete(options: UseThaiAddressAutocompleteOp
 
   // When `index` changes (e.g. loaded after user started typing, or swapped for a
   // custom dataset), re-run the search immediately rather than waiting for the
-  // next keystroke.
+  // next keystroke. A still-suppressed query (initialQuery / setQuerySilent
+  // value) stays un-searched even when the index arrives late.
   useEffect(() => {
-    if (isFirstIndexEffectRunRef.current) {
-      isFirstIndexEffectRunRef.current = false
-      return
-    }
     if (query.length === 0) return
-    if (suppressNextSearchRef.current) {
-      suppressNextSearchRef.current = false
-      return
-    }
+    if (query === suppressedQueryRef.current) return
     if (timerRef.current) clearTimeout(timerRef.current)
     runSearch(query, index)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -165,15 +156,13 @@ export function useThaiAddressAutocomplete(options: UseThaiAddressAutocompleteOp
    * to echo a chosen suggestion's label back into the input after
    * `selectSuggestion`, or to seed the input programmatically at any point
    * after mount (e.g. when async `defaultValues` resolve later).
+   *
+   * The value stays un-searched until a genuinely different query arrives —
+   * including across index swaps and StrictMode double-invocations.
    */
   const setQuerySilent = useCallback((value: string) => {
     if (timerRef.current) clearTimeout(timerRef.current)
-    // Only arm suppression for a non-empty value: the query effect's
-    // `query.length === 0` branch returns before ever checking (and
-    // resetting) `suppressNextSearchRef`, so arming it here for an empty
-    // value would leave it stuck `true` and wrongly swallow the *next* real
-    // keystroke.
-    if (value.length > 0) suppressNextSearchRef.current = true
+    suppressedQueryRef.current = value
     setSuggestions([])
     matchedRecordsMapRef.current = new Map()
     setQuery(value)

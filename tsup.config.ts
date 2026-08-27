@@ -15,6 +15,16 @@ function prependUseClient(files: string[]) {
   }
 }
 
+// tsup has no top-level `charset` option (its config schema forwards only a
+// subset of esbuild options), but it lets us mutate the esbuild BuildOptions
+// per entry via `esbuildOptions`. Emitting Thai text as UTF-8 instead of
+// \uXXXX escapes avoids doubling every Thai byte (3 UTF-8 bytes → 6 escape
+// bytes): for dist/data.js alone that is ~187 KB raw (~6 KB gzip / ~5 KB
+// brotli) for zero benefit on any modern JS runtime.
+function setUtf8Charset(options: import('esbuild').BuildOptions): void {
+  options.charset = 'utf8'
+}
+
 export default defineConfig([
   // Core entry: pure headless API, no React
   {
@@ -25,6 +35,12 @@ export default defineConfig([
     sourcemap: true,
     clean: true,
     treeshake: true,
+    esbuildOptions: setUtf8Charset,
+    // Emit Thai text as UTF-8 instead of \uXXXX escapes. esbuild's ASCII
+    // default doubles every Thai byte (3 UTF-8 bytes → 6 escape bytes):
+    // for dist/data.js alone that is +187 KB raw (~+6 KB gzip / +5 KB
+    // brotli) for zero benefit on any modern JS runtime.
+    // (charset is applied via esbuildOptions, not this unsupported key.)
   },
   // React entry: hook + hook options type
   {
@@ -35,6 +51,7 @@ export default defineConfig([
     sourcemap: true,
     external: ['react', 'react-dom'],
     treeshake: true,
+    esbuildOptions: setUtf8Charset,
     // Required for Next.js App Router: importing this hook from a Server
     // Component must fail fast with a clear directive rather than a build
     // error deep in React's server/client boundary. Core and data entries
@@ -56,5 +73,6 @@ export default defineConfig([
     sourcemap: false,
     external: [],
     treeshake: true,
+    esbuildOptions: setUtf8Charset,
   },
 ])
