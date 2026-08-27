@@ -127,6 +127,8 @@ const index = buildThaiAddressIndex({ provinces, amphures, tambons }, {
 
 Input is validated by default, so a stray non-string field fails with `[thaizip] tambon 100404: expected string for name_th, got number` instead of crashing inside the normalizer. It costs nothing measurable on a full-size dataset. `validateRawData(data)` runs the same checks standalone.
 
+`RawData` is meant to be trusted, application-controlled input — your own dataset, not arbitrary end-user uploads. `buildThaiAddressIndex` has no built-in cap on row count or field length; build cost scales linearly with total input size, but an unbounded or maliciously oversized payload (e.g. an admin importer fed directly to this function) can still cost real time and memory with nothing to stop it. If you ever build an index from untrusted input, enforce your own size limits (row count, field length) before calling `buildThaiAddressIndex`.
+
 Types: `RawData`, `RawProvince`, `RawAmphure`, `RawTambon`.
 
 ## Types
