@@ -176,9 +176,12 @@ describe('validateRawData', () => {
 })
 
 describe('buildThaiAddressIndex validation integration', () => {
-  // name_th/name_en being a truthy non-string crashes deep inside the normalizer
-  // (`input.trim is not a function`) regardless of the `validate` option, since
-  // normalization always runs during indexing (see S-4 in the audit report).
+  // name_th/name_en being a truthy non-string still crashes deep inside the
+  // normalizer (`input.trim is not a function`) when `validate: false` skips
+  // the upfront check, since normalization always runs during indexing (see
+  // S-4 in the audit report). With `validate: true` (the default), that same
+  // bad data is now caught before it ever reaches the normalizer, via a
+  // descriptive `[thaizip] ...: expected string for name_th, got ...` error.
   // zip_code, by contrast, only ever flows through `String(...)`, so an invalid
   // zip_code type is a case validation alone catches, cleanly demonstrating the
   // opt-out: building still succeeds (just with a stringified bad value) when

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest'
+import { StrictMode } from 'react'
 import { renderHook, act } from '@testing-library/react'
 import { buildThaiAddressIndex } from '../core/indexer'
 import { useThaiAddressAutocomplete } from '../react/useThaiAddressAutocomplete'
@@ -212,5 +213,125 @@ describe('useThaiAddressAutocomplete', () => {
     // The `[index]` effect re-runs the search synchronously (within act), without
     // waiting for the debounce timer.
     expect(result.current.suggestions.length).toBeGreaterThan(0)
+  })
+
+  // --- Phase 2 regression tests: suppressedQueryRef must survive StrictMode's
+  // double-invoked effects, an index arriving asynchronously after mount, and
+  // rapid/mixed calls to setQuery/setQuerySilent/clear. ---
+
+  it('StrictMode + initialQuery: dropdown never opens across the double effect pass', () => {
+    const { result } = renderHook(
+      () => useThaiAddressAutocomplete({ index, debounce: 200, initialQuery: 'ลาดพร้าว' }),
+      { wrapper: StrictMode },
+    )
+
+    expect(result.current.query).toBe('ลาดพร้าว')
+    expect(result.current.suggestions).toHaveLength(0)
+    expect(result.current.isOpen).toBe(false)
+
+    act(() => { vi.advanceTimersByTime(1000) })
+
+    expect(result.current.suggestions).toHaveLength(0)
+    expect(result.current.isOpen).toBe(false)
+  })
+
+  it('initialQuery stays un-searched even when the index arrives asynchronously after mount', () => {
+    const emptyIndex = buildThaiAddressIndex({ provinces: [], amphures: [], tambons: [] })
+    const { result, rerender } = renderHook(
+      ({ idx }) => useThaiAddressAutocomplete({ index: idx, debounce: 200, initialQuery: 'ลาดพร้าว' }),
+      { initialProps: { idx: emptyIndex } },
+    )
+
+    expect(result.current.suggestions).toHaveLength(0)
+
+    // The real index "arrives" later (e.g. loadDefaultIndex() resolving after mount).
+    act(() => { rerender({ idx: index }) })
+    expect(result.current.suggestions).toHaveLength(0)
+    expect(result.current.isOpen).toBe(false)
+
+    act(() => { vi.advanceTimersByTime(1000) })
+    expect(result.current.suggestions).toHaveLength(0)
+    expect(result.current.isOpen).toBe(false)
+  })
+
+  it('a normal edit after initialQuery searches normally', () => {
+    const { result } = renderHook(() =>
+      useThaiAddressAutocomplete({ index, debounce: 200, initialQuery: 'ลาดพร้าว' }),
+    )
+
+    act(() => { result.current.setQuery('จอมพล') })
+    act(() => { vi.advanceTimersByTime(200) })
+
+    expect(result.current.suggestions.length).toBeGreaterThan(0)
+    expect(result.current.isOpen).toBe(true)
+  })
+
+  it('repeated setQuerySilent calls with the same value never reopen the dropdown', () => {
+    const { result } = renderHook(() => useThaiAddressAutocomplete({ index, debounce: 200 }))
+
+    act(() => { result.current.setQuerySilent('ลาดพร้าว') })
+    act(() => { result.current.setQuerySilent('ลาดพร้าว') })
+    act(() => { vi.advanceTimersByTime(1000) })
+
+    expect(result.current.suggestions).toHaveLength(0)
+    expect(result.current.isOpen).toBe(false)
+  })
+
+  it('rapid query churn (growing prefixes under the debounce interval) settles to one final result set', () => {
+    const { result } = renderHook(() => useThaiAddressAutocomplete({ index, debounce: 200 }))
+    const prefixes = ['ล', 'ลา', 'ลาด', 'ลาดพ', 'ลาดพร', 'ลาดพร้าว']
+
+    for (const prefix of prefixes) {
+      act(() => { result.current.setQuery(prefix) })
+      act(() => { vi.advanceTimersByTime(50) }) // stays under the 200ms debounce each step
+    }
+    act(() => { vi.advanceTimersByTime(200) })
+
+    expect(result.current.query).toBe('ลาดพร้าว')
+    expect(result.current.suggestions.length).toBeGreaterThan(0)
+  })
+
+  it('stress sequence: type, clear, type, index swap, select, unmount — exactly one onSelect, no post-unmount throw', () => {
+    const onSelect = vi.fn()
+    const { result, rerender, unmount } = renderHook(
+      ({ idx }) => useThaiAddressAutocomplete({ index: idx, debounce: 200, onSelect }),
+      { initialProps: { idx: index } },
+    )
+
+    act(() => { result.current.setQuery('ลาดพร้าว') })
+    act(() => { vi.advanceTimersByTime(200) })
+    expect(result.current.suggestions.length).toBeGreaterThan(0)
+
+    act(() => { result.current.clear() })
+    expect(result.current.suggestions).toHaveLength(0)
+
+    act(() => { result.current.setQuery('จอมพล') })
+
+    const newIndex = buildThaiAddressIndex(mockData)
+    act(() => { rerender({ idx: newIndex }) })
+    act(() => { vi.advanceTimersByTime(200) })
+    expect(result.current.suggestions.length).toBeGreaterThan(0)
+
+    const suggestion = result.current.suggestions[0]
+    act(() => { result.current.selectSuggestion(suggestion) })
+    expect(onSelect).toHaveBeenCalledTimes(1)
+
+    expect(() => unmount()).not.toThrow()
+  })
+
+  it('clear() then typing the same string as initialQuery does not search (documents current suppressedQueryRef behaviour)', () => {
+    // clear() intentionally does not reset suppressedQueryRef (see its
+    // implementation) — so if the very next query happens to equal the
+    // original initialQuery string, that one search stays suppressed. This
+    // pins the current behaviour rather than leaving it undocumented.
+    const { result } = renderHook(() =>
+      useThaiAddressAutocomplete({ index, debounce: 200, initialQuery: 'ลาดพร้าว' }),
+    )
+
+    act(() => { result.current.clear() })
+    act(() => { result.current.setQuery('ลาดพร้าว') })
+    act(() => { vi.advanceTimersByTime(200) })
+
+    expect(result.current.suggestions).toHaveLength(0)
   })
 })

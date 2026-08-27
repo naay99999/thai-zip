@@ -39,4 +39,25 @@ describe('loadDefaultIndex', () => {
     const [a, b] = await Promise.all([loadDefaultIndex(), loadDefaultIndex()])
     expect(a).toBe(b)
   })
+
+  it('clearDefaultIndex() during an in-flight load does not corrupt the cache', async () => {
+    // No mock/fake-timer needed here: a dynamic import() always resolves as a
+    // microtask, even for an already-loaded module (spec run-to-completion
+    // guarantee). So a synchronous clearDefaultIndex() issued right after
+    // starting loadDefaultIndex() — before awaiting it — is guaranteed to run
+    // (and bump the generation counter) before the in-flight promise's .then()
+    // callback can commit its result to `cached`.
+    clearDefaultIndex()
+    const inFlight = loadDefaultIndex() // starts the dynamic import; not yet awaited
+    clearDefaultIndex() // bumps loadGeneration mid-flight, same synchronous tick
+
+    const stale = await inFlight // still resolves successfully...
+    expect(stale.records.length).toBeGreaterThan(7000)
+
+    const fresh = await loadDefaultIndex() // ...but wasn't cached, so this builds fresh
+    expect(fresh).not.toBe(stale)
+
+    const second = await loadDefaultIndex() // this build should now be the cache
+    expect(second).toBe(fresh)
+  })
 })

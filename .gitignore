@@ -8,6 +8,10 @@ dist/
 # Coverage
 coverage/
 
+# CPU profiles (bench/profile-*.ts output)
+bench/.profiles/
+*.cpuprofile
+
 # Env
 .env
 .env.local
@@ -33,3 +37,4 @@ Thumbs.db
 .copilot/
 .aider*
 .continue/
+.codex/
