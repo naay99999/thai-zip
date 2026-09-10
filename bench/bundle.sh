@@ -14,7 +14,7 @@ analyze() {
 
 echo "=== dist bundle sizes (bytes: raw / gzip-9 / brotli-11) ==="
 printf "  %-22s %10s %10s %12s\n" "file" "raw" "gzip" "brotli"
-for f in dist/index.js dist/index.cjs dist/react.js dist/react.cjs dist/data.js dist/data.cjs; do
+for f in dist/index.js dist/index.cjs dist/react.js dist/react.cjs dist/data.js dist/data.cjs dist/defaultData.js; do
   [ -f "$f" ] && analyze "$f"
 done
 
