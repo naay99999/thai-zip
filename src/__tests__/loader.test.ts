@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { loadDefaultIndex, clearDefaultIndex } from '../data'
+import { loadDefaultIndex, clearDefaultIndex, getDefaultIndexIfLoaded } from '../data'
 
 describe('loadDefaultIndex', () => {
   it('returns a valid TrigramIndex', async () => {
@@ -59,5 +59,33 @@ describe('loadDefaultIndex', () => {
 
     const second = await loadDefaultIndex() // this build should now be the cache
     expect(second).toBe(fresh)
+  })
+})
+
+describe('getDefaultIndexIfLoaded', () => {
+  it('returns null before anything has been loaded', () => {
+    clearDefaultIndex()
+    expect(getDefaultIndexIfLoaded()).toBeNull()
+  })
+
+  it('returns the same instance loadDefaultIndex resolved to', async () => {
+    clearDefaultIndex()
+    const loaded = await loadDefaultIndex()
+    expect(getDefaultIndexIfLoaded()).toBe(loaded)
+  })
+
+  it('returns null again after clearDefaultIndex()', async () => {
+    await loadDefaultIndex()
+    clearDefaultIndex()
+    expect(getDefaultIndexIfLoaded()).toBeNull()
+  })
+
+  it('stays null while a load is still in flight, without starting one itself', async () => {
+    clearDefaultIndex()
+    expect(getDefaultIndexIfLoaded()).toBeNull() // must not kick off a build
+    const inFlight = loadDefaultIndex()
+    expect(getDefaultIndexIfLoaded()).toBeNull() // not committed to cache yet
+    await inFlight
+    expect(getDefaultIndexIfLoaded()).not.toBeNull()
   })
 })
