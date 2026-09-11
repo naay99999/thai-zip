@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.5](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.4...thaizip-v0.7.5) (2026-09-11)
+
+
+### Features
+
+* add getDefaultIndexIfLoaded for synchronous cache checks ([68a0213](https://github.com/naay99999/thai-zip/commit/68a02135ef8f6977dca70a51df64ab29f8fe4f63))
+
+
+### Performance Improvements
+
+* split defaultData into a separately emitted chunk ([9b680f4](https://github.com/naay99999/thai-zip/commit/9b680f4c9464cbb9827bb4ef2022ef3f21f665e0))
+
 ## [0.7.4](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.3...thaizip-v0.7.4) (2026-09-09)
 
 
