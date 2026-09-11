@@ -12,6 +12,22 @@ export function clearDefaultIndex(): void {
   loadGeneration++
 }
 
+/**
+ * The already-built default index, or `null` if it has not finished building.
+ *
+ * Purely synchronous: it never starts a build and never touches the in-flight
+ * promise. It exists so a consumer can seed its initial state without waiting a
+ * microtask — `loadDefaultIndex()` is async even on a cache hit, which otherwise
+ * forces a one-frame loading state on every remount of an already-warm page.
+ *
+ * Returns `null` on a cold start and after `clearDefaultIndex()`, so callers must
+ * still call `loadDefaultIndex()` — this only lets them skip the visible flash
+ * when the answer is already known.
+ */
+export function getDefaultIndexIfLoaded(): TrigramIndex | null {
+  return cached
+}
+
 export async function loadDefaultIndex(): Promise<TrigramIndex> {
   if (cached) return cached
   if (!inflightPromise) {
