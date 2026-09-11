@@ -25,7 +25,7 @@ This is a headless Thai address autocomplete library published as `thaizip`. It 
 **Package exports:**
 - `thaizip` — headless core only (search, enumeration, formatter, resolver, normalizer, romanization aliases, `validateRawData`). Contains **no** React code.
 - `thaizip/react` — `useThaiAddressAutocomplete` and its types. `react`/`react-dom` are external optional peers. The built files carry a `"use client"` directive (prepended by a tsup `onSuccess` hook — esbuild strips module-level directives during bundling, so `banner` alone does not survive).
-- `thaizip/data` — exports `loadDefaultIndex()` and `clearDefaultIndex()` (async, lazy-loads compact tuple arrays from `defaultData.ts` and builds the TrigramIndex at runtime; separate export so tree-shakers can isolate it)
+- `thaizip/data` — exports `loadDefaultIndex()`, `clearDefaultIndex()`, and `getDefaultIndexIfLoaded()` (async, lazy-loads compact tuple arrays from `defaultData.ts` and builds the TrigramIndex at runtime; separate export so tree-shakers can isolate it). The generated tuple data additionally ships as its own emitted file, `dist/defaultData.js` — `loader.ts`'s `import('./defaultData')` is marked external by a scoped esbuild `onResolve` plugin in `tsup.config.ts`, so it survives into the output as a real `import('./defaultData.js')` instead of being flattened into an in-file `__esm` wrapper. A bundler that code-splits dynamic imports therefore defers downloading the ~114 KB gzip dataset until `loadDefaultIndex()` actually runs, rather than shipping it with every consumer's initial chunk. This is best-effort: build modes that inline all dynamic imports still include it. `getDefaultIndexIfLoaded()` is the synchronous cache peek — it never starts a build, and exists so a consumer can seed initial state without a one-frame loading flash on a warm remount.
 
 **Data pipeline:**
 - Raw JSON files in `data/` (thai_geographies, thai_provinces, thai_amphures, thai_tambons) are the source of truth
@@ -53,7 +53,7 @@ This is a headless Thai address autocomplete library published as `thaizip`. It 
 
 **Build output (`tsup`):**
 - Dual ESM + CJS, `react` and `react-dom` are external peers (optional peer dependency)
-- Three entries: `src/index.ts` (core, React-free), `src/react/index.ts`, `src/data/index.ts`
+- Three *public* entries (one per `exports` subpath): `src/index.ts` (core, React-free), `src/react/index.ts`, `src/data/index.ts`. `tsup.config.ts` has a fourth config object building `src/data/defaultData.ts` into `dist/defaultData.js` — an internal sibling chunk, not an `exports` subpath: it is reached only via the relative `import('./defaultData.js')` left inside `dist/data.js`, which never passes through the exports map. `package.json`'s flat `dist/*.js` files glob already ships it. It is ESM-only and `dts: false` (both `dist/data.js` and `dist/data.cjs` dynamic-import it; `import()` works from CJS too, and the `Compact*` types were never public). Its config **must** keep `esbuildOptions: setUtf8Charset` — that entry now holds all the Thai text, and dropping it re-introduces the +187 KB raw `\uXXXX`-escape regression.
 - The react entry gets its `"use client"` directive from an `onSuccess` post-processing step, not `banner` — esbuild ignores module-level directives when bundling and warns about it
 
 **Tests:** Vitest with jsdom environment, test files live in `src/__tests__/`.

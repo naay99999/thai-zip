@@ -21,9 +21,11 @@ The package splits into three entry points so you only import what you use:
 |---|---|
 | `thaizip` | core functions + types (no React code, 4.4 KB gzip) |
 | `thaizip/react` | `useThaiAddressAutocomplete` (ships `"use client"`) |
-| `thaizip/data` | `loadDefaultIndex`, `clearDefaultIndex` (132 KB gzip) |
+| `thaizip/data` | `loadDefaultIndex`, `clearDefaultIndex`, `getDefaultIndexIfLoaded` (2.3 KB gzip + a 114 KB gzip data chunk fetched later) |
 
 `thaizip/data` is separated out because it's by far the largest chunk — a tree-shaking bundler won't pull it in unless you actually import it.
+
+The dataset itself is split one level further, into its own emitted file. A bundler that code-splits dynamic imports (webpack, Turbopack, Vite/Rollup) will not download those 114 KB until `loadDefaultIndex()` actually runs — importing `thaizip/data` alone is not enough to pull them in. This is best-effort: bundlers or build modes that inline every dynamic import (some SSR/CJS setups) will still place it in the initial chunk.
 
 ## Load the index and search
 

@@ -20,7 +20,7 @@ npm install thaizip
 |---|---|
 | `thaizip` | core functions + types (no React code, 4.4 KB gzip) |
 | `thaizip/react` | `useThaiAddressAutocomplete` (ships `"use client"`) |
-| `thaizip/data` | `loadDefaultIndex`, `clearDefaultIndex` (132 KB gzip) |
+| `thaizip/data` | `loadDefaultIndex`, `clearDefaultIndex`, `getDefaultIndexIfLoaded` (2.3 KB gzip, plus a 114 KB gzip data chunk fetched lazily on the first `loadDefaultIndex()` call) |
 
 ## Quick start
 
