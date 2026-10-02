@@ -1,5 +1,5 @@
-// Index initialization benchmark: cold/warm build, phase breakdown, memory.
-// Run: node --expose-gc --import tsx bench/init.ts
+// Index initialization benchmark: source build, production cold load, memory.
+// Run: npm run build && node --expose-gc --import tsx bench/init.ts
 import { hrtime } from 'node:process'
 import { buildThaiAddressIndex, validateRawData } from '../src/core/indexer'
 import { normalizeThaiAddressText } from '../src/core/normalizer'
@@ -53,10 +53,6 @@ function instrumentedBuild(data: RawData): { phases: Phase[] } {
 
   const provTrigrams = new Map<number, Set<string>>()
   const ampTrigrams = new Map<number, Set<string>>()
-  mark('parent trigram precompute (norm+grams)', () => {
-    for (const [id, prov] of provMap!) provTrigrams.set(id, combinedTrigrams(prov.name_th, prov.name_en))
-    for (const [id, amp] of ampMap!) ampTrigrams.set(id, combinedTrigrams(amp.name_th, amp.name_en))
-  })
 
   const records: any[] = []
   const map = new Map<string, Set<number>>()
@@ -72,6 +68,7 @@ function instrumentedBuild(data: RawData): { phases: Phase[] } {
   let tambonNormNs = 0n
   let tambonTrigramNs = 0n
   let zipTrigramNs = 0n
+  let parentPrecomputeNs = 0n
   let parentAddNs = 0n
 
   for (const tambon of tambons) {
@@ -130,8 +127,21 @@ function instrumentedBuild(data: RawData): { phases: Phase[] } {
     t1 = hrtime.bigint(); zipTrigramNs += t1 - t0
 
     t0 = hrtime.bigint()
-    addTrigrams(map, provTrigrams.get(province.id)!, idx)
-    addTrigrams(map, ampTrigrams.get(amphure.id)!, idx)
+    let provinceGrams = provTrigrams.get(province.id)
+    if (!provinceGrams) {
+      provinceGrams = combinedTrigrams(province.name_th, province.name_en)
+      provTrigrams.set(province.id, provinceGrams)
+    }
+    let amphureGrams = ampTrigrams.get(amphure.id)
+    if (!amphureGrams) {
+      amphureGrams = combinedTrigrams(amphure.name_th, amphure.name_en)
+      ampTrigrams.set(amphure.id, amphureGrams)
+    }
+    t1 = hrtime.bigint(); parentPrecomputeNs += t1 - t0
+
+    t0 = hrtime.bigint()
+    addTrigrams(map, provinceGrams, idx)
+    addTrigrams(map, amphureGrams, idx)
     t1 = hrtime.bigint(); parentAddNs += t1 - t0
   }
 
@@ -141,6 +151,7 @@ function instrumentedBuild(data: RawData): { phases: Phase[] } {
   phases.push({ name: 'tambon normalize (th+en)', ns: tambonNormNs })
   phases.push({ name: 'tambon trigram add (th+en)', ns: tambonTrigramNs })
   phases.push({ name: 'zip trigram add', ns: zipTrigramNs })
+  phases.push({ name: 'parent trigram first-use (norm+grams)', ns: parentPrecomputeNs })
   phases.push({ name: 'parent trigram add (prov+amp)', ns: parentAddNs })
   return { phases }
 }
@@ -209,19 +220,19 @@ console.log(`  zipIndex entries=${index.zipIndex.size}  byProvince=${index.byPro
 console.log(`  postings per record avg=${(totalPostings / index.records.length).toFixed(1)}`)
 
 // ---------------------------------------------------------------------------
-// 5. loadDefaultIndex cold — fresh subprocess (module parse + tuple map + build)
+// 5. Built-package cold load — fresh subprocess (module parse + tuple map + build)
 // ---------------------------------------------------------------------------
-header('5. loadDefaultIndex cold (fresh subprocess) + warm')
+header('5. built ESM loadDefaultIndex cold (fresh subprocess)')
 import { execFileSync } from 'node:child_process'
 const coldScript = `
 const t0 = performance.now()
-const { loadDefaultIndex } = await import('./src/data/loader.ts')
+const { loadDefaultIndex } = await import('./dist/data.js')
 const idx = await loadDefaultIndex()
 const t1 = performance.now()
 console.log(JSON.stringify({ coldMs: t1 - t0, records: idx.records.length }))
 `
 for (let i = 0; i < 5; i++) {
-  const out = execFileSync('node', ['--expose-gc', '--import', 'tsx', '-e', coldScript], {
+  const out = execFileSync('node', ['--expose-gc', '--input-type=module', '-e', coldScript], {
     cwd: process.cwd(),
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
@@ -230,17 +241,14 @@ for (let i = 0; i < 5; i++) {
   console.log(`  run ${i + 1}: cold loadDefaultIndex = ${fmt(parsed.coldMs)}  (records=${parsed.records})`)
 }
 
-// Warm path: loadDefaultIndex called again returns cached promise synchronously-ish
-console.log('\n  (warm cached call is a resolved-promise await — sub-microsecond; measured in bench/search via direct index reuse)')
-
 // ---------------------------------------------------------------------------
-// 6. Module parse cost of defaultData.ts alone
+// 6. Module parse cost of the shipped data chunk alone
 // ---------------------------------------------------------------------------
-header('6. defaultData.ts module parse (fresh subprocess)')
+header('6. built defaultData.js module parse (fresh subprocess)')
 for (let i = 0; i < 3; i++) {
   const out = execFileSync(
     'node',
-    ['--import', 'tsx', '-e', `const t0=performance.now(); const m = await import('./src/data/defaultData.ts'); const t1=performance.now(); console.log(JSON.stringify({parseMs: t1-t0, t: m.t.length}))`],
+    ['--input-type=module', '-e', `const t0=performance.now(); const m = await import('./dist/defaultData.js'); const t1=performance.now(); console.log(JSON.stringify({parseMs: t1-t0, t: m.t.length}))`],
     { cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
   )
   const parsed = JSON.parse(out.trim().split('\n').pop()!)

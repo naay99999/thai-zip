@@ -95,6 +95,21 @@ describe('buildThaiAddressIndex', () => {
     buildThaiAddressIndex(mockData, { onSkip })
     expect(onSkip).not.toHaveBeenCalled()
   })
+
+  it('does not normalize unused parents while building an index', () => {
+    const unusedProvince = {
+      id: 99, name_en: 'Unused', geography_id: 1, deleted_at: null,
+      get name_th(): string { throw new Error('unused province was normalized') },
+    }
+    const data: RawData = {
+      provinces: [mockData.provinces[0], unusedProvince],
+      amphures: [mockData.amphures[0]],
+      tambons: [mockData.tambons[0]],
+    }
+    const index = buildThaiAddressIndex(data, { validate: false })
+    expect(index.records).toHaveLength(1)
+    expect(index.records[0].provinceId).toBe(1)
+  })
 })
 
 describe('validateRawData', () => {
@@ -172,6 +187,50 @@ describe('validateRawData', () => {
       tambons: [{ id: 100404, zip_code: 10900, name_th: 'x', name_en: 'x', amphure_id: '1001' as unknown as number, deleted_at: null }],
     }
     expect(() => validateRawData(data)).toThrow(/\[thaizip\] tambon 100404: expected number for amphure_id, got string/)
+  })
+
+  it('rejects an oversized parent name before indexing', () => {
+    const data: RawData = {
+      provinces: [{ ...mockData.provinces[0], name_th: 'x'.repeat(300) }],
+      amphures: [],
+      tambons: [],
+    }
+    expect(() => validateRawData(data)).toThrow(/\[thaizip\].*name_th.*too long/)
+    expect(() => buildThaiAddressIndex(data)).toThrow(/\[thaizip\].*name_th.*too long/)
+  })
+
+  it('rejects excessive parent fan-out before building postings', () => {
+    const distinctName = Array.from({ length: 256 }, (_, i) => String.fromCharCode(0x2000 + i)).join('')
+    const data: RawData = {
+      provinces: [{ ...mockData.provinces[0], name_th: distinctName }],
+      amphures: [mockData.amphures[0]],
+      tambons: Array.from({ length: 5_000 }, (_, i) => ({
+        id: i + 1, name_th: 'T', name_en: 'T', amphure_id: 1001,
+        zip_code: 10900, deleted_at: null,
+      })),
+    }
+    expect(() => validateRawData(data)).toThrow(/\[thaizip\].*posting budget/)
+  })
+
+  it('allows repeated parent characters that produce few unique trigrams', () => {
+    const data: RawData = {
+      provinces: [{ ...mockData.provinces[0], name_th: 'a'.repeat(128) }],
+      amphures: [mockData.amphures[0]],
+      tambons: Array.from({ length: 8_000 }, (_, i) => ({
+        id: i + 1, name_th: 'T', name_en: 'T', amphure_id: 1001,
+        zip_code: 10900, deleted_at: null,
+      })),
+    }
+    expect(() => validateRawData(data)).not.toThrow()
+  })
+
+  it('rejects excessive row counts before walking the rows', () => {
+    const data: RawData = {
+      provinces: Array(50_001).fill(mockData.provinces[0]),
+      amphures: [],
+      tambons: [],
+    }
+    expect(() => validateRawData(data)).toThrow(/\[thaizip\].*row limit/)
   })
 })
 

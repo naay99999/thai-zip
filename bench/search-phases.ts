@@ -1,7 +1,9 @@
 // Fine-grained search phase instrumentation — splits searchThaiAddress internals.
 // Run: node --expose-gc --import tsx bench/search-phases.ts
 import { hrtime } from 'node:process'
+import assert from 'node:assert/strict'
 import { buildThaiAddressIndex } from '../src/core/indexer'
+import { searchThaiAddress } from '../src/core/search'
 import { normalizeThaiAddressText } from '../src/core/normalizer'
 import { extractTrigramsNormalized } from '../src/core/trigrams'
 import { applyRomanizationAliases } from '../src/core/romanize'
@@ -12,6 +14,9 @@ const raw = defaultRawData()
 const index = buildThaiAddressIndex(raw, { validate: false })
 
 const TH_COLLATOR = new Intl.Collator('th')
+const HAS_LATIN_RE = /[a-z]/i
+const counts = new Uint32Array(index.records.length)
+const touched = new Int32Array(index.records.length)
 
 function rankAgainstName(name: string | undefined, query: string): number {
   if (name === undefined || name.length === 0) return 0
@@ -41,25 +46,30 @@ const phases = {
 function instrumentedSearch(query: string, limit = 10, threshold = 0.4) {
   let t0 = hrtime.bigint()
   const normalized = normalizeThaiAddressText(query)
-  const searchText = /[a-z]/i.test(normalized) ? applyRomanizationAliases(normalized) : normalized
   let t1 = hrtime.bigint(); phases.normalize += Number(t1 - t0) / 1e6; t0 = t1
+
+  const searchText = HAS_LATIN_RE.test(normalized) ? applyRomanizationAliases(normalized) : normalized
+  t1 = hrtime.bigint(); phases.alias += Number(t1 - t0) / 1e6; t0 = t1
 
   const queryTrigrams = extractTrigramsNormalized(searchText)
   t1 = hrtime.bigint(); phases.trigrams += Number(t1 - t0) / 1e6; t0 = t1
 
-  const hits = new Map<number, number>()
+  let touchedLen = 0
   for (const trigram of queryTrigrams) {
     const candidates = index.map.get(trigram)
     if (!candidates) continue
     for (const idx of candidates) {
-      hits.set(idx, (hits.get(idx) ?? 0) + 1)
+      if (counts[idx] === 0) touched[touchedLen++] = idx
+      counts[idx]++
     }
   }
   t1 = hrtime.bigint(); phases.hitAccumulate += Number(t1 - t0) / 1e6; t0 = t1
 
   const scored: { idx: number; score: number; matchRank: number }[] = []
-  for (const [idx, count] of hits) {
-    const score = count / queryTrigrams.size
+  for (let i = 0; i < touchedLen; i++) {
+    const idx = touched[i]
+    const score = counts[idx] / queryTrigrams.size
+    counts[idx] = 0
     if (score >= threshold) {
       scored.push({ idx, score, matchRank: computeMatchRank(idx, searchText) })
     }
@@ -72,7 +82,13 @@ function instrumentedSearch(query: string, limit = 10, threshold = 0.4) {
   })
   t1 = hrtime.bigint(); phases.presort += Number(t1 - t0) / 1e6; t0 = t1
 
-  const windowSize = Math.max(limit * 4, 50)
+  let windowSize = Math.min(limit, scored.length)
+  const boundary = scored[windowSize - 1]
+  while (windowSize < scored.length &&
+    scored[windowSize].score === boundary.score &&
+    scored[windowSize].matchRank === boundary.matchRank) {
+    windowSize++
+  }
   const window = scored.slice(0, windowSize)
   window.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score
@@ -87,7 +103,7 @@ function instrumentedSearch(query: string, limit = 10, threshold = 0.4) {
   })
   t1 = hrtime.bigint(); phases.collatorWindow += Number(t1 - t0) / 1e6; t0 = t1
 
-  const out = window.slice(0, limit).map(({ idx }) => index.records[idx])
+  const out = window.slice(0, limit).map(({ idx }) => ({ ...index.records[idx] }))
   t1 = hrtime.bigint(); phases.materialize += Number(t1 - t0) / 1e6
   return out
 }
@@ -96,11 +112,12 @@ const QUERIES = ['bang rak', 'bang', 'ban', 'lat phrao', 'ladkrabang', 'krungthe
 
 for (const q of QUERIES) {
   header(`Phase breakdown: "${q}" (avg of 300 runs)`)
+  const actual = searchThaiAddress(index, q).map(record => record.tambonId)
+  const measured = instrumentedSearch(q).map(record => record.tambonId)
+  assert.deepEqual(measured, actual, `instrumented ranking drifted for ${q}`)
+  for (let i = 0; i < 5; i++) instrumentedSearch(q)
   for (const k of Object.keys(phases) as (keyof typeof phases)[]) phases[k] = 0
-  for (let i = 0; i < 305; i++) {
-    const r = instrumentedSearch(q)
-    if (i === 0 && r.length === -1) console.log(r)
-  }
+  for (let i = 0; i < 300; i++) instrumentedSearch(q)
   const total = Object.values(phases).reduce((a, b) => a + b, 0)
   const order: (keyof typeof phases)[] = ['normalize', 'alias', 'trigrams', 'hitAccumulate', 'scoreMatchRank', 'presort', 'collatorWindow', 'materialize']
   for (const k of order) {

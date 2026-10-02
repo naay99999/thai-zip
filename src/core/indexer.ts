@@ -2,6 +2,13 @@ import { extractTrigrams, extractTrigramsNormalized } from './trigrams'
 import { normalizeThaiAddressText } from './normalizer'
 import type { BuildIndexOptions, RawData, RawTambon, ThaiAddressRecord, TrigramIndex } from '../types'
 
+// Bounds for consumer-supplied data. Parent trigrams are inserted once per
+// child, so the budget must account for fan-out, not just payload byte size.
+const MAX_TOTAL_ROWS = 50_000
+const MAX_NAME_LENGTH = 256
+const MAX_ZIP_LENGTH = 32
+const MAX_POSTING_BUDGET = 1_000_000
+
 function typeErr(table: string, id: unknown, field: string, expected: string, value: unknown): TypeError {
   return new TypeError(`[thaizip] ${table} ${id}: expected ${expected} for ${field}, got ${typeof value}`)
 }
@@ -17,10 +24,9 @@ function typeName(value: unknown): string {
  * private datasets) who want to fail fast with a descriptive error instead of an
  * opaque crash deep inside the normalizer, or silent `"undefined"` labels.
  *
- * Throws a `TypeError` (message prefixed `[thaizip]`) naming the table, the
- * offending record's `id`, the field, and the actual `typeof` on the first bad
- * field found. Does not filter soft-deleted rows first — validates every row as
- * provided.
+ * Throws a `TypeError` for bad shapes or duplicate IDs and a `RangeError` for
+ * resource limits (all prefixed `[thaizip]`). Does not filter soft-deleted rows
+ * before shape checks — validates every row as provided.
  *
  * IDs must be unique within each table (duplicates throw, they are not silently
  * discarded — two suggestions sharing an id would resolve to the wrong record).
@@ -42,35 +48,45 @@ export function validateRawData(data: RawData): void {
   if (!Array.isArray(tambons)) {
     throw new TypeError(`[thaizip] RawData.tambons must be an array, got ${typeName(tambons)}`)
   }
+  if (provinces.length + amphures.length + tambons.length > MAX_TOTAL_ROWS) {
+    throw new RangeError(`[thaizip] RawData row limit exceeded (${MAX_TOTAL_ROWS})`)
+  }
 
-  const seenProvinceIds = new Set<number>()
+  const provinceById = new Map<number, (typeof provinces)[number]>()
   for (let i = 0; i < provinces.length; i++) {
     const p = provinces[i]
     if (p === null || typeof p !== 'object') {
       throw new TypeError(`[thaizip] province[${i}]: expected object, got ${typeName(p)}`)
     }
     if (typeof p.id !== 'number') throw typeErr('province', p.id, 'id', 'number', p.id)
-    if (seenProvinceIds.has(p.id)) throw new TypeError(`[thaizip] duplicate province id: ${p.id}`)
-    seenProvinceIds.add(p.id)
+    if (provinceById.has(p.id)) throw new TypeError(`[thaizip] duplicate province id: ${p.id}`)
+    provinceById.set(p.id, p)
     if (typeof p.name_th !== 'string') throw typeErr('province', p.id, 'name_th', 'string', p.name_th)
     if (typeof p.name_en !== 'string') throw typeErr('province', p.id, 'name_en', 'string', p.name_en)
+    if (p.name_th.length > MAX_NAME_LENGTH) throw new RangeError(`[thaizip] province ${p.id}: name_th too long`)
+    if (p.name_en.length > MAX_NAME_LENGTH) throw new RangeError(`[thaizip] province ${p.id}: name_en too long`)
   }
 
-  const seenAmphureIds = new Set<number>()
+  const amphureById = new Map<number, (typeof amphures)[number]>()
   for (let i = 0; i < amphures.length; i++) {
     const a = amphures[i]
     if (a === null || typeof a !== 'object') {
       throw new TypeError(`[thaizip] amphure[${i}]: expected object, got ${typeName(a)}`)
     }
     if (typeof a.id !== 'number') throw typeErr('amphure', a.id, 'id', 'number', a.id)
-    if (seenAmphureIds.has(a.id)) throw new TypeError(`[thaizip] duplicate amphure id: ${a.id}`)
-    seenAmphureIds.add(a.id)
+    if (amphureById.has(a.id)) throw new TypeError(`[thaizip] duplicate amphure id: ${a.id}`)
+    amphureById.set(a.id, a)
     if (typeof a.name_th !== 'string') throw typeErr('amphure', a.id, 'name_th', 'string', a.name_th)
     if (typeof a.name_en !== 'string') throw typeErr('amphure', a.id, 'name_en', 'string', a.name_en)
     if (typeof a.province_id !== 'number') throw typeErr('amphure', a.id, 'province_id', 'number', a.province_id)
+    if (a.name_th.length > MAX_NAME_LENGTH) throw new RangeError(`[thaizip] amphure ${a.id}: name_th too long`)
+    if (a.name_en.length > MAX_NAME_LENGTH) throw new RangeError(`[thaizip] amphure ${a.id}: name_en too long`)
   }
 
   const seenTambonIds = new Set<number>()
+  const provinceTrigramCounts = new Map<number, number>()
+  const amphureTrigramCounts = new Map<number, number>()
+  let postingBudget = 0
   for (let i = 0; i < tambons.length; i++) {
     const t = tambons[i]
     if (t === null || typeof t !== 'object') {
@@ -81,11 +97,36 @@ export function validateRawData(data: RawData): void {
     seenTambonIds.add(t.id)
     if (typeof t.name_th !== 'string') throw typeErr('tambon', t.id, 'name_th', 'string', t.name_th)
     if (typeof t.name_en !== 'string') throw typeErr('tambon', t.id, 'name_en', 'string', t.name_en)
+    if (t.name_th.length > MAX_NAME_LENGTH) throw new RangeError(`[thaizip] tambon ${t.id}: name_th too long`)
+    if (t.name_en.length > MAX_NAME_LENGTH) throw new RangeError(`[thaizip] tambon ${t.id}: name_en too long`)
     const zipType = typeof t.zip_code
     if (zipType !== 'string' && zipType !== 'number') {
       throw typeErr('tambon', t.id, 'zip_code', 'string or number', t.zip_code)
     }
     if (typeof t.amphure_id !== 'number') throw typeErr('tambon', t.id, 'amphure_id', 'number', t.amphure_id)
+    const zipLength = String(t.zip_code).length
+    if (zipLength > MAX_ZIP_LENGTH) throw new RangeError(`[thaizip] tambon ${t.id}: zip_code too long`)
+
+    if (t.deleted_at) continue
+    const amphure = amphureById.get(t.amphure_id)
+    const province = amphure && provinceById.get(amphure.province_id)
+    if (!amphure || amphure.deleted_at || !province || province.deleted_at) continue
+    let provinceGrams = provinceTrigramCounts.get(province.id)
+    if (provinceGrams === undefined) {
+      provinceGrams = combinedTrigrams(province.name_th, province.name_en).size
+      provinceTrigramCounts.set(province.id, provinceGrams)
+    }
+    let amphureGrams = amphureTrigramCounts.get(amphure.id)
+    if (amphureGrams === undefined) {
+      amphureGrams = combinedTrigrams(amphure.name_th, amphure.name_en).size
+      amphureTrigramCounts.set(amphure.id, amphureGrams)
+    }
+    // Parent costs use unique trigram counts; lengths would reject long but
+    // low-entropy names (e.g. repeated letters) that produce tiny posting sets.
+    postingBudget += t.name_th.length + t.name_en.length + zipLength + provinceGrams + amphureGrams
+    if (postingBudget > MAX_POSTING_BUDGET) {
+      throw new RangeError(`[thaizip] estimated trigram posting budget exceeded (${MAX_POSTING_BUDGET})`)
+    }
   }
 }
 
@@ -122,16 +163,10 @@ export function buildThaiAddressIndex(data: RawData, options?: BuildIndexOptions
     amphures.filter(a => !a.deleted_at).map(a => [a.id, a])
   )
 
-  // Pre-compute trigrams for shared province and amphure fields to avoid
-  // redundant normalization when multiple tambons share the same parent.
+  // Cache parent trigrams on first use. Unused parents must not incur
+  // normalization work outside the validated posting budget.
   const provTrigrams = new Map<number, Set<string>>()
-  for (const [id, prov] of provMap) {
-    provTrigrams.set(id, combinedTrigrams(prov.name_th, prov.name_en))
-  }
   const ampTrigrams = new Map<number, Set<string>>()
-  for (const [id, amp] of ampMap) {
-    ampTrigrams.set(id, combinedTrigrams(amp.name_th, amp.name_en))
-  }
 
   const records: ThaiAddressRecord[] = []
   const map = new Map<string, Set<number>>()
@@ -194,9 +229,18 @@ export function buildThaiAddressIndex(data: RawData, options?: BuildIndexOptions
     normTambonEn.push(normEn)
     addTrigrams(map, extractTrigramsNormalized(normEn), idx)
     addTrigrams(map, extractTrigrams(record.zipCode), idx)
-    // Reuse pre-computed province and amphure trigrams
-    addTrigrams(map, provTrigrams.get(province.id)!, idx)
-    addTrigrams(map, ampTrigrams.get(amphure.id)!, idx)
+    let provinceGrams = provTrigrams.get(province.id)
+    if (!provinceGrams) {
+      provinceGrams = combinedTrigrams(province.name_th, province.name_en)
+      provTrigrams.set(province.id, provinceGrams)
+    }
+    let amphureGrams = ampTrigrams.get(amphure.id)
+    if (!amphureGrams) {
+      amphureGrams = combinedTrigrams(amphure.name_th, amphure.name_en)
+      ampTrigrams.set(amphure.id, amphureGrams)
+    }
+    addTrigrams(map, provinceGrams, idx)
+    addTrigrams(map, amphureGrams, idx)
   }
 
   // Ascending zip keys + parallel postings, for O(log n) prefix lookup.

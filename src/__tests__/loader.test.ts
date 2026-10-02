@@ -15,6 +15,27 @@ describe('loadDefaultIndex', () => {
     expect(a).toBe(b)
   })
 
+  it('protects the shared default records from mutation', async () => {
+    const index = await loadDefaultIndex()
+    const original = index.records[0].tambonNameTh
+    expect(() => { index.records[0].tambonNameTh = 'changed' }).toThrow()
+    expect(() => { index.records.push(index.records[0]) }).toThrow()
+    expect((await loadDefaultIndex()).records[0].tambonNameTh).toBe(original)
+  })
+
+  it('protects default index maps, sets, and posting arrays from mutation', async () => {
+    const index = await loadDefaultIndex()
+    const trigram = index.map.keys().next().value!
+    const before = index.map.get(trigram)!.size
+    expect(() => index.map.get(trigram)!.add(-1)).toThrow()
+    expect(() => index.map.set('fake', new Set())).toThrow()
+    expect(() => index.zipIndex.get('10500')!.push(-1)).toThrow()
+    expect(() => index.byProvince.clear()).toThrow()
+    expect(() => { index.map = new Map() }).toThrow()
+    expect(index.map.get(trigram)!.size).toBe(before)
+    expect((await loadDefaultIndex()).map.has('fake')).toBe(false)
+  })
+
   it('clearDefaultIndex resets cache so next call rebuilds', async () => {
     const a = await loadDefaultIndex()
     clearDefaultIndex()
