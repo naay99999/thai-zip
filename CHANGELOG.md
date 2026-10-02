@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.6](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.5...thaizip-v0.7.6) (2026-10-02)
+
+
+### Bug Fixes
+
+* bound index construction and protect cached data ([e4519fa](https://github.com/naay99999/thai-zip/commit/e4519fa28402cfeda1e6d1f85d81b5d61560e935))
+
 ## [0.7.5](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.4...thaizip-v0.7.5) (2026-09-11)
 
 
