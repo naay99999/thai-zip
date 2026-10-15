@@ -170,8 +170,12 @@ export function searchThaiAddress(
   // Special case: zip code query (require at least 2 digits to avoid overly broad matches)
   if (ZIP_CODE_RE.test(normalized)) {
     if (normalized.length < 2) return []
+    // A complete 5-digit zip returns every tambon it maps to (up to a few
+    // dozen) — capping it at the text `limit` would hide valid subdistricts.
+    // A partial prefix ("30") can match hundreds of records, so it falls back
+    // to `limit` to keep the result size bounded for callers that only set it.
     return lookupByZipCode(index, normalized, {
-      zipLimit: options?.zipLimit ?? Infinity,
+      zipLimit: options?.zipLimit ?? (normalized.length >= 5 ? Infinity : limit),
     })
   }
 

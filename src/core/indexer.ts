@@ -13,6 +13,15 @@ function typeErr(table: string, id: unknown, field: string, expected: string, va
   return new TypeError(`[thaizip] ${table} ${id}: expected ${expected} for ${field}, got ${typeof value}`)
 }
 
+// IDs become suggestion keys via String(id), so NaN, Infinity and fractional
+// values would produce colliding or meaningless keys ("NaN", "1.5").
+function assertId(table: string, id: unknown, field: string, value: unknown): void {
+  if (typeof value !== 'number') throw typeErr(table, id, field, 'number', value)
+  if (!Number.isSafeInteger(value)) {
+    throw new TypeError(`[thaizip] ${table} ${id}: expected safe integer for ${field}, got ${value}`)
+  }
+}
+
 /** `typeof` that reports `null` as `'null'` instead of `'object'`. */
 function typeName(value: unknown): string {
   return value === null ? 'null' : typeof value
@@ -58,7 +67,7 @@ export function validateRawData(data: RawData): void {
     if (p === null || typeof p !== 'object') {
       throw new TypeError(`[thaizip] province[${i}]: expected object, got ${typeName(p)}`)
     }
-    if (typeof p.id !== 'number') throw typeErr('province', p.id, 'id', 'number', p.id)
+    assertId('province', p.id, 'id', p.id)
     if (provinceById.has(p.id)) throw new TypeError(`[thaizip] duplicate province id: ${p.id}`)
     provinceById.set(p.id, p)
     if (typeof p.name_th !== 'string') throw typeErr('province', p.id, 'name_th', 'string', p.name_th)
@@ -73,12 +82,12 @@ export function validateRawData(data: RawData): void {
     if (a === null || typeof a !== 'object') {
       throw new TypeError(`[thaizip] amphure[${i}]: expected object, got ${typeName(a)}`)
     }
-    if (typeof a.id !== 'number') throw typeErr('amphure', a.id, 'id', 'number', a.id)
+    assertId('amphure', a.id, 'id', a.id)
     if (amphureById.has(a.id)) throw new TypeError(`[thaizip] duplicate amphure id: ${a.id}`)
     amphureById.set(a.id, a)
     if (typeof a.name_th !== 'string') throw typeErr('amphure', a.id, 'name_th', 'string', a.name_th)
     if (typeof a.name_en !== 'string') throw typeErr('amphure', a.id, 'name_en', 'string', a.name_en)
-    if (typeof a.province_id !== 'number') throw typeErr('amphure', a.id, 'province_id', 'number', a.province_id)
+    assertId('amphure', a.id, 'province_id', a.province_id)
     if (a.name_th.length > MAX_NAME_LENGTH) throw new RangeError(`[thaizip] amphure ${a.id}: name_th too long`)
     if (a.name_en.length > MAX_NAME_LENGTH) throw new RangeError(`[thaizip] amphure ${a.id}: name_en too long`)
   }
@@ -92,7 +101,7 @@ export function validateRawData(data: RawData): void {
     if (t === null || typeof t !== 'object') {
       throw new TypeError(`[thaizip] tambon[${i}]: expected object, got ${typeName(t)}`)
     }
-    if (typeof t.id !== 'number') throw typeErr('tambon', t.id, 'id', 'number', t.id)
+    assertId('tambon', t.id, 'id', t.id)
     if (seenTambonIds.has(t.id)) throw new TypeError(`[thaizip] duplicate tambon id: ${t.id}`)
     seenTambonIds.add(t.id)
     if (typeof t.name_th !== 'string') throw typeErr('tambon', t.id, 'name_th', 'string', t.name_th)
@@ -103,7 +112,7 @@ export function validateRawData(data: RawData): void {
     if (zipType !== 'string' && zipType !== 'number') {
       throw typeErr('tambon', t.id, 'zip_code', 'string or number', t.zip_code)
     }
-    if (typeof t.amphure_id !== 'number') throw typeErr('tambon', t.id, 'amphure_id', 'number', t.amphure_id)
+    assertId('tambon', t.id, 'amphure_id', t.amphure_id)
     const zipLength = String(t.zip_code).length
     if (zipLength > MAX_ZIP_LENGTH) throw new RangeError(`[thaizip] tambon ${t.id}: zip_code too long`)
 

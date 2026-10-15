@@ -101,6 +101,17 @@ describe('defaultIndex integration', () => {
     expect(results).toHaveLength(33)
   })
 
+  // A partial prefix can match hundreds of records; without an explicit
+  // zipLimit it is bounded by the text-search `limit` instead.
+  it('caps a partial zip prefix at limit by default', () => {
+    expect(searchThaiAddress(index, '30')).toHaveLength(10)
+    expect(searchThaiAddress(index, '30', { limit: 3 })).toHaveLength(3)
+  })
+
+  it('returns every prefix match when zipLimit is Infinity', () => {
+    expect(searchThaiAddress(index, '30', { zipLimit: Infinity }).length).toBeGreaterThan(200)
+  })
+
   it('honours zipLimit for zip 45000', () => {
     const results = searchThaiAddress(index, '45000', { zipLimit: 5 })
     expect(results).toHaveLength(5)

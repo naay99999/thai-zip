@@ -113,9 +113,11 @@ export type SearchOptions = {
   limit?: number
   threshold?: number
   /**
-   * Maximum results for all-digit (zip code) queries. A zip code maps to at most
-   * a few dozen tambons, so this defaults to `Infinity` — capping zip results at
-   * the text-autocomplete `limit` silently hides valid subdistricts.
+   * Maximum results for all-digit (zip code) queries. When omitted, a complete
+   * 5-digit zip returns every matching tambon (at most a few dozen — capping
+   * those at the text-autocomplete `limit` would silently hide valid
+   * subdistricts), while a partial prefix (2–4 digits, which can match hundreds
+   * of records) is capped at `limit`. Pass `Infinity` to return every prefix match.
    */
   zipLimit?: number
   /**
@@ -130,6 +132,7 @@ export type UseThaiAddressAutocompleteOptions = {
   limit?: number
   debounce?: number
   threshold?: number
+  /** Maximum results for zip code queries; see `SearchOptions.zipLimit` for the default. */
   zipLimit?: number
   /** Seed value for `query` on first render. Defaults to `''`. */
   initialQuery?: string
@@ -177,6 +180,10 @@ export type BuildIndexOptions = {
    * Validate that every consumed field has the expected runtime type and throw a
    * descriptive `TypeError` if not. Defaults to `true`; set to `false` to skip
    * the checks when the data source is already trusted (e.g. the bundled index).
+   *
+   * `false` also skips the row, name-length and posting-budget limits that bound
+   * memory and CPU use, so never disable it for data you do not control
+   * (user uploads, third-party APIs, a CMS editable by others).
    */
   validate?: boolean
 }
