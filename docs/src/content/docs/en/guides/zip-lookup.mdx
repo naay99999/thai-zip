@@ -4,10 +4,13 @@ description: How postal-code search behaves, and why zipLimit is unlimited by de
 ---
 
 import ZipDemo from '../../../../components/demos/ZipDemo'
+import ComponentPreview from '../../../../components/ComponentPreview.astro'
 
 Try typing a postal code below — the default, `45000`, covers 33 subdistricts:
 
-<ZipDemo client:visible locale="en" />
+<ComponentPreview source="ZipDemo">
+  <ZipDemo client:visible locale="en" />
+</ComponentPreview>
 
 ## Behavior
 

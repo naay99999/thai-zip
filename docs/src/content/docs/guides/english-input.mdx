@@ -4,10 +4,13 @@ description: การสะกดแบบ RTGS ที่ค้นหาได�
 ---
 
 import SearchDemo from '../../../components/demos/SearchDemo'
+import ComponentPreview from '../../../components/ComponentPreview.astro'
 
 ลองพิมพ์ชื่อสถานที่เป็นภาษาอังกฤษดู:
 
-<SearchDemo client:visible initialQuery="bang rak" />
+<ComponentPreview source="SearchDemo">
+  <SearchDemo client:visible initialQuery="bang rak" />
+</ComponentPreview>
 
 ## การสะกดแบบ RTGS ใช้ได้ทันที
 

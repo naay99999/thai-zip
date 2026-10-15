@@ -4,10 +4,13 @@ description: ตัวเลือกของ searchThaiAddress การจั
 ---
 
 import SearchDemo from '../../../components/demos/SearchDemo'
+import ComponentPreview from '../../../components/ComponentPreview.astro'
 
 ลองพิมพ์ในช่องด้านล่าง — ค้นหาด้วยชื่อตำบล อำเภอ จังหวัด (ไทยหรืออังกฤษ) หรือรหัสไปรษณีย์ก็ได้:
 
-<SearchDemo client:visible />
+<ComponentPreview source="SearchDemo">
+  <SearchDemo client:visible />
+</ComponentPreview>
 
 ## การใช้งานพื้นฐาน
 

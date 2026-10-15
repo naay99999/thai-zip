@@ -4,16 +4,19 @@ description: useThaiAddressAutocomplete จาก thaizip/react — debounce, st
 ---
 
 import HookDemo from '../../../components/demos/HookDemo'
+import ComponentPreview from '../../../components/ComponentPreview.astro'
 
 `thaizip/react` มี hook ชื่อ `useThaiAddressAutocomplete` ให้ ครอบการค้นหา (`searchThaiAddress`) พร้อม debounce 200ms และจัดการ state ของ query/suggestions ให้เสร็จสรรพ `react`/`react-dom` เป็น peer dependency แบบ optional และไฟล์ที่ build ออกมาแนบ `"use client"` มาให้แล้ว จึงใช้ได้ใน Next.js App Router ได้เลยโดยไม่ต้องห่อ wrapper เพิ่ม
 
 ลองพิมพ์ในช่องด้านล่าง แล้วคลิกเลือกผลลัพธ์ — ค่าที่เลือกจะถูกส่งกลับผ่าน `onSelect` เป็นออบเจ็กต์ `ResolvedThaiAddress`:
 
-<HookDemo client:visible />
+<ComponentPreview source="HookDemo">
+  <HookDemo client:visible />
+</ComponentPreview>
 
 ## ตัวอย่างแบบไม่ตกแต่ง style
 
-นี่คือ component ที่ demo ด้านบนใช้จริง (ตัดส่วน loading/error ของ index ออก) — เรียก hook แล้ว render input กับ `<ul>` ของผลลัพธ์แบบดิบ ๆ:
+นี่คือ demo ด้านบนฉบับย่อ (ตัดส่วน loading/error ของ index และ i18n ออก) — เรียก hook แล้ว render input กับ `<ul>` ของผลลัพธ์แบบดิบ ๆ โค้ดฉบับเต็มอยู่ในแท็บ "โค้ด" ด้านบน:
 
 ```tsx
 import { useState } from 'react'
@@ -63,5 +66,5 @@ function AddressAutocomplete({ index }: { index: TrigramIndex }) {
 | `clear` | รีเซ็ต `query` และ `suggestions` กลับเป็นค่าว่าง |
 
 :::tip
-อยากได้ component สำเร็จรูปแบบ shadcn (Base UI + Tailwind)? ดู [react-thaizip](https://github.com/naay99999/react-thai-zip)
+อยากได้ component สำเร็จรูปที่ scaffold ลงโปรเจกต์ (vanilla หรือ shadcn/ui แบบ Base UI, Radix, React Aria)? ดู [react-thaizip](https://react-thai-zip.vercel.app/)
 :::

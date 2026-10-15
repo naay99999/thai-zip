@@ -4,10 +4,13 @@ description: API สำหรับสร้าง dropdown แบบลดห�
 ---
 
 import CascadeDemo from '../../../components/demos/CascadeDemo'
+import ComponentPreview from '../../../components/ComponentPreview.astro'
 
 ลองเลือกจังหวัด แล้วเลือกอำเภอ/เขต ตามด้วยตำบล/แขวง — รหัสไปรษณีย์จะโผล่ขึ้นมาเองเมื่อเลือกครบ:
 
-<CascadeDemo client:visible />
+<ComponentPreview source="CascadeDemo">
+  <CascadeDemo client:visible />
+</ComponentPreview>
 
 ## API สำหรับ enumeration
 

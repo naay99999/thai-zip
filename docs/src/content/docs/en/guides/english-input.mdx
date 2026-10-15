@@ -4,10 +4,13 @@ description: RTGS spellings that work out of the box, and the alias list for non
 ---
 
 import SearchDemo from '../../../../components/demos/SearchDemo'
+import ComponentPreview from '../../../../components/ComponentPreview.astro'
 
 Try typing a place name in English:
 
-<SearchDemo client:visible locale="en" initialQuery="bang rak" />
+<ComponentPreview source="SearchDemo">
+  <SearchDemo client:visible locale="en" initialQuery="bang rak" />
+</ComponentPreview>
 
 ## RTGS spellings work directly
 
