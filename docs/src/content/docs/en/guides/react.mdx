@@ -4,16 +4,19 @@ description: useThaiAddressAutocomplete from thaizip/react — debounce, state, 
 ---
 
 import HookDemo from '../../../../components/demos/HookDemo'
+import ComponentPreview from '../../../../components/ComponentPreview.astro'
 
 `thaizip/react` ships a hook, `useThaiAddressAutocomplete`, that wraps `searchThaiAddress` with a built-in 200 ms debounce and manages query/suggestions state for you. `react`/`react-dom` are optional peer dependencies, and the built files already carry a `"use client"` directive, so it works in a Next.js App Router project without any extra wrapper.
 
 Type below, then click a result — the value you pick is handed back through `onSelect` as a `ResolvedThaiAddress` object:
 
-<HookDemo client:visible locale="en" />
+<ComponentPreview source="HookDemo">
+  <HookDemo client:visible locale="en" />
+</ComponentPreview>
 
 ## Minimal unstyled example
 
-This is the same component the demo above uses (minus the loading/error handling around the index) — it calls the hook and renders a plain input and a `<ul>` of results:
+This is a trimmed version of the demo above (without the index loading/error handling and i18n) — it calls the hook and renders a plain input and a `<ul>` of results. The full source is in the "Code" tab above:
 
 ```tsx
 import { useState } from 'react'
@@ -63,5 +66,5 @@ Note: `useThaiAddressAutocomplete` requires a non-null `index` in its options, a
 | `clear` | Resets `query` and `suggestions` back to empty |
 
 :::tip
-Want a ready-made component in the shadcn style (Base UI + Tailwind)? See [react-thaizip](https://github.com/naay99999/react-thai-zip)
+Want ready-made components scaffolded into your project (vanilla, or shadcn/ui on Base UI, Radix, or React Aria)? See [react-thaizip](https://react-thai-zip.vercel.app/en)
 :::

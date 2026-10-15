@@ -4,10 +4,13 @@ description: searchThaiAddress options, how results are ranked, and known limita
 ---
 
 import SearchDemo from '../../../../components/demos/SearchDemo'
+import ComponentPreview from '../../../../components/ComponentPreview.astro'
 
 Try typing below — search by subdistrict, district, or province name (Thai or English), or by postal code:
 
-<SearchDemo client:visible locale="en" />
+<ComponentPreview source="SearchDemo">
+  <SearchDemo client:visible locale="en" />
+</ComponentPreview>
 
 ## Basic usage
 

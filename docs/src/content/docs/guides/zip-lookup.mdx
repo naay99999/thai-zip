@@ -4,10 +4,13 @@ description: พฤติกรรมของการค้นหาด้ว�
 ---
 
 import ZipDemo from '../../../components/demos/ZipDemo'
+import ComponentPreview from '../../../components/ComponentPreview.astro'
 
 ลองพิมพ์รหัสไปรษณีย์ในช่องด้านล่าง — ค่าเริ่มต้นคือ `45000` ซึ่งครอบคลุมถึง 33 ตำบล:
 
-<ZipDemo client:visible />
+<ComponentPreview source="ZipDemo">
+  <ZipDemo client:visible />
+</ComponentPreview>
 
 ## พฤติกรรม
 

@@ -4,10 +4,13 @@ description: The province → district → subdistrict enumeration API, and how 
 ---
 
 import CascadeDemo from '../../../../components/demos/CascadeDemo'
+import ComponentPreview from '../../../../components/ComponentPreview.astro'
 
 Pick a province, then a district, then a subdistrict — the postal code appears once all three are selected:
 
-<CascadeDemo client:visible locale="en" />
+<ComponentPreview source="CascadeDemo">
+  <CascadeDemo client:visible locale="en" />
+</ComponentPreview>
 
 ## The enumeration API
 
