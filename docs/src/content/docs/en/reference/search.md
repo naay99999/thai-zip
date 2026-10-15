@@ -29,9 +29,9 @@ Fuzzy address search by subdistrict/district/province name (Thai or English) or 
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `limit?` | `number` | `10` | Caps the number of results — only applies to text queries, not postal-code queries |
+| `limit?` | `number` | `10` | Caps the number of results for text queries. For postal-code queries it only applies to a 2–4 digit prefix when `zipLimit` is omitted |
 | `threshold?` | `number` | `0.4` | Minimum score (0–1) a result must reach to count as a match — only applies to text queries |
-| `zipLimit?` | `number` | `Infinity` | Caps the number of results when the query is all digits. Unlimited by default because a single postal code can map to dozens of tambons |
+| `zipLimit?` | `number` | `Infinity` for a 5-digit code, `limit` for a 2–4 digit prefix | Caps the number of results when the query is all digits. A complete code is unlimited by default because it can map to dozens of tambons; a partial prefix is capped because it can match hundreds |
 | `romanizationAliases?` | `boolean` | `true` | Expands non-RTGS English spellings (e.g. `lardprao`) to match what's in the dataset before searching — only applies to Latin-script queries |
 
 ### Returns
@@ -42,7 +42,7 @@ Fuzzy address search by subdistrict/district/province name (Thai or English) or 
 
 - Returns `[]` immediately if `index` or `query` is empty/falsy, if `query.length > 1000` before normalization, or if the normalized text exceeds 300 characters
 - `query` is always run through `normalizeThaiAddressText` before matching (see below)
-- If the normalized text is all digits (`/^\d+$/`) and at least 2 digits long, it's automatically routed to `lookupByZipCode`, forwarding only `zipLimit` (`limit`, `threshold`, and `romanizationAliases` have no effect on this path) — an all-digit string shorter than 2 digits returns `[]`
+- If the normalized text is all digits (`/^\d+$/`) and at least 2 digits long, it's automatically routed to `lookupByZipCode`, forwarding `zipLimit` — or, when it's omitted, `Infinity` for a 5-digit code and `limit` for a shorter prefix (`threshold` and `romanizationAliases` have no effect on this path) — an all-digit string shorter than 2 digits returns `[]`
 - Normalized text shorter than 3 characters (and not a postal code) always returns `[]`, since trigrams from a string shorter than 3 chars would match meaninglessly
 - If the normalized query contains a Latin letter (`/[a-z]/i`) and `romanizationAliases !== false`, `applyRomanizationAliases` runs before trigram extraction
 - **Ranking** happens in three passes, in order: (1) `score = hits / queryTrigrams.size` descending, (2) `matchRank` descending — `3` when the query exactly matches the tambon's own name (Thai or English), `2` for a prefix match, `1` for a substring match, `0` when it doesn't match the tambon's own name at all (only matched via its parent district/province), (3) Thai-locale sort on `provinceNameTh` → `amphureNameTh` → `tambonNameTh` using a module-level cached `Intl.Collator('th')` (never constructed inside the loop)

@@ -1,6 +1,6 @@
 ---
 title: Postal Code Lookup
-description: How postal-code search behaves, and why zipLimit is unlimited by default
+description: How postal-code search behaves, and why a full postal code is never capped by default
 ---
 
 import ZipDemo from '../../../../components/demos/ZipDemo'
@@ -18,11 +18,13 @@ When a query is all digits and at least 2 digits long, `searchThaiAddress` route
 
 Results always put exact code matches first, followed by prefix matches, sorted by ascending code.
 
-## Why `zipLimit` is unlimited
+## Default `zipLimit`
 
 A single postal code can cover many subdistricts — `45000` covers 33 of them, and out of the 953 postal codes in the dataset, 230 cover more than 10 subdistricts each.
 
-If `zipLimit` were capped at the text-search `limit` (10 by default), a large number of valid subdistricts would be silently hidden. That's why the demo above defaults to `45000` — so this is visible the moment the page loads.
+If a complete code were capped at the text-search `limit` (10 by default), a large number of valid subdistricts would be silently hidden. So when you don't pass `zipLimit`, `searchThaiAddress` returns **every** subdistrict for a complete 5-digit code. That's why the demo above defaults to `45000` — so this is visible the moment the page loads.
+
+A partial prefix is different: `30` alone matches about 290 subdistricts. For 2–4 digit prefixes the default is therefore capped at `limit`, so a single short query can't return hundreds of records — which matters if you expose search through a server endpoint. Pass `zipLimit: Infinity` to get every prefix match, or any number to set your own cap. Calling `lookupByZipCode` directly is never capped unless you pass `zipLimit`.
 
 ```ts
 import { lookupByZipCode } from 'thaizip'
