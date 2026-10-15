@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.7](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.6...thaizip-v0.7.7) (2026-10-15)
+
+
+### Bug Fixes
+
+* cap partial zip-prefix results and require integer ids ([a24c0ad](https://github.com/naay99999/thai-zip/commit/a24c0ad23b4d85f0513d2dd827558fee9f95b19c))
+* pin raw address data checksums and drop dangling sourcemap refs ([8cb6020](https://github.com/naay99999/thai-zip/commit/8cb60209da3ce23e1e075504d9919e52b281241b))
+
 ## [0.7.6](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.5...thaizip-v0.7.6) (2026-10-02)
 
 
