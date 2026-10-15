@@ -1,16 +1,13 @@
 # thaizip
 
 [![npm version](https://img.shields.io/npm/v/thaizip.svg)](https://www.npmjs.com/package/thaizip)
-[![npm downloads](https://img.shields.io/npm/dm/thaizip.svg)](https://www.npmjs.com/package/thaizip)
 [![license](https://img.shields.io/npm/l/thaizip.svg)](https://github.com/naay99999/thai-zip/blob/main/LICENSE)
 
 Fast fuzzy autocomplete for Thai addresses — subdistrict, district, province, postal code. Thai and English input, zero runtime dependencies, React optional.
 
 **Docs:** https://naay99999.github.io/thai-zip/ (ไทย / [English](https://naay99999.github.io/thai-zip/en/))
 
-| Thai input | English input (romanization alias) |
-|---|---|
-| ![thaizip demo — typing "ลาดพร้าว" and getting fuzzy Thai suggestions](.github/assets/demo.png) | ![thaizip demo — typing "ladprao" and matching the same Thai suggestions](.github/assets/demo-en.png) |
+![thaizip demo — typing "ลาดพร้าว", "ladprao" and "10230" to get fuzzy Thai address suggestions, then resolving a selection](.github/assets/demo.gif)
 
 ```bash
 npm install thaizip
