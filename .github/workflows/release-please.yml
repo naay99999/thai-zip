@@ -6,17 +6,19 @@ on:
       - main
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
     steps:
       # Pinned to full commit SHAs (supply-chain hardening): a mutable tag can
-      # be re-pointed upstream, and this pipeline holds NPM_TOKEN.
+      # be re-pointed upstream, and this pipeline can publish to npm.
       - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
         id: release
         with:
@@ -27,25 +29,32 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
-    # Narrower than the workflow-level grant: this job only builds and publishes,
-    # it never writes to the repo or to pull requests. Keeping it read-only limits
-    # what a compromised build-time dependency could do with GITHUB_TOKEN.
+    # This job only builds and publishes; it never writes to the repo or to
+    # pull requests. Keeping it read-only limits what a compromised build-time
+    # dependency could do with GITHUB_TOKEN.
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 20
+          node-version: 24
           registry-url: https://registry.npmjs.org
 
-      - run: npm ci
+      # npm >= 11.5.1 is required for trusted publishing (OIDC).
+      - run: npm install --global npm@11.17.0
+      # --ignore-scripts: this job can mint an OIDC token that publishes the
+      # package, so no dependency lifecycle script may run inside it.
+      - run: npm ci --ignore-scripts
       - run: npm run generate-data
+      - run: npm test
       - run: npm run build
-      # --provenance (with id-token: write above) lets consumers verify the
-      # published tarball was built by this workflow from this commit.
+      # Trusted publishing: npm exchanges this workflow's OIDC token for a
+      # short-lived publish credential, so no long-lived NPM_TOKEN exists to
+      # leak. Requires a Trusted Publisher for this repo + workflow on
+      # npmjs.com. Provenance is attached automatically.
       - run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -76,4 +76,6 @@ This project uses [release-please](https://github.com/googleapis/release-please)
 2. release-please bot opens a PR titled `chore(main): release X.Y.Z` with a CHANGELOG draft
 3. Review and merge the PR → bot tags the release and publishes to npm automatically
 
-**Required GitHub secret:** `NPM_TOKEN` (Settings → Secrets → Actions)
+**Publishing auth:** npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC) — no `NPM_TOKEN` secret. The `thaizip` package on npmjs.com must list this repo + `.github/workflows/release-please.yml` as a Trusted Publisher. The publish job installs with `--ignore-scripts` because it holds `id-token: write`.
+
+**CI:** `.github/workflows/ci.yml` runs generate-data (which verifies `data/SHA256SUMS`), tests, typecheck and build on every PR and push to `main`.
