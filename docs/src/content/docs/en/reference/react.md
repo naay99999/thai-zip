@@ -29,7 +29,7 @@ A headless hook that wraps `searchThaiAddress` with a built-in debounce and mana
 | `limit?` | `number` | `10` | Forwarded to `searchThaiAddress` as-is — caps the number of results for text queries |
 | `debounce?` | `number` | `200` | Delay, in milliseconds, before a search actually runs after the user stops typing |
 | `threshold?` | `number` | `0.4` | Forwarded to `searchThaiAddress` as-is — the minimum score that counts as a match |
-| `zipLimit?` | `number` | `undefined` | Forwarded to `searchThaiAddress` as-is (the hook itself sets no default — if omitted, `searchThaiAddress`'s own default of `Infinity` applies) |
+| `zipLimit?` | `number` | `undefined` | Forwarded to `searchThaiAddress` as-is (the hook itself sets no default — if omitted, `searchThaiAddress`'s own default applies: `Infinity` for a 5-digit code, `limit` for a 2–4 digit prefix) |
 | `initialQuery?` | `string` | `''` | Seed value for `query` on first render. **Does not trigger a search** — useful for pre-filling the input with an already-chosen address (e.g. react-hook-form `defaultValues`) without popping the dropdown open |
 | `locale?` | `AddressLocale` (`'th' \| 'en'`) | `undefined` | Language for the `label` field of returned `suggestions`, forwarded to `formatThaiAddressSuggestion` |
 | `onSelect?` | `(address: ResolvedThaiAddress) => void` | `undefined` | Called after `selectSuggestion` successfully resolves an address |

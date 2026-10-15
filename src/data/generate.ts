@@ -2,6 +2,7 @@
  * Build script: reads raw JSON data → generates src/data/defaultData.ts
  * Run: npm run generate-data
  */
+import { createHash } from 'crypto'
 import { readFileSync, writeFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -10,6 +11,20 @@ import type { RawData } from '../types'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const dataDir = resolve(__dirname, '../../data')
 const outFile = resolve(__dirname, 'defaultData.ts')
+
+// data/SHA256SUMS pins the exact raw tables that were reviewed (see
+// data/SOURCE.md). A mismatch means the data changed without the checksums
+// being regenerated deliberately, so refuse to generate from it.
+function verifyChecksums(): void {
+  const lines = readFileSync(resolve(dataDir, 'SHA256SUMS'), 'utf-8').trim().split('\n')
+  for (const line of lines) {
+    const [expected, filename] = line.trim().split(/\s+/)
+    const actual = createHash('sha256').update(readFileSync(resolve(dataDir, filename))).digest('hex')
+    if (actual !== expected) {
+      throw new Error(`data/${filename} does not match data/SHA256SUMS (expected ${expected}, got ${actual}). See data/SOURCE.md.`)
+    }
+  }
+}
 
 function readJson<T>(filename: string): T {
   return JSON.parse(readFileSync(resolve(dataDir, filename), 'utf-8')) as T
@@ -39,6 +54,8 @@ function validateRawData(data: RawData): void {
     if (typeof t.name_en !== 'string') throw new Error(`tambon missing name_en: ${JSON.stringify(t)}`)
   }
 }
+
+verifyChecksums()
 
 const rawData: RawData = {
   geographies: readJson('thai_geographies.json'),

@@ -167,6 +167,24 @@ describe('validateRawData duplicate id detection', () => {
 // SEC-5 / Phase 3 — malformed runtime input at public boundaries
 // ---------------------------------------------------------------------------
 
+describe('validateRawData id must be a safe integer', () => {
+  it.each([NaN, Infinity, 1.5, Number.MAX_SAFE_INTEGER + 1])('rejects tambon id %s', (id) => {
+    const data: RawData = { ...baseData, tambons: [{ ...baseData.tambons[0], id }] }
+    expect(() => validateRawData(data)).toThrow('expected safe integer for id')
+  })
+
+  it('rejects a fractional amphure province_id and tambon amphure_id', () => {
+    expect(() => validateRawData({
+      ...baseData,
+      amphures: [{ ...baseData.amphures[0], province_id: 1.5 }],
+    })).toThrow('expected safe integer for province_id')
+    expect(() => validateRawData({
+      ...baseData,
+      tambons: [{ ...baseData.tambons[0], amphure_id: NaN }],
+    })).toThrow('expected safe integer for amphure_id')
+  })
+})
+
 describe('runtime API boundary hardening', () => {
   const junkValues = [
     null,

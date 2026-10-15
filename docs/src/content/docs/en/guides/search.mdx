@@ -20,14 +20,14 @@ Try typing below — search by subdistrict, district, or province name (Thai or 
 searchThaiAddress(index, query, {
   limit: 10,                 // text queries only
   threshold: 0.4,            // match quality 0–1
-  zipLimit: Infinity,        // all-digit queries — unlimited by default
+  zipLimit: undefined,       // all-digit queries — see below for the default
   romanizationAliases: true, // expand non-RTGS spellings
 })
 ```
 
-- `limit` caps the number of results for text searches only; it has no effect on postal-code searches.
+- `limit` caps the number of results for text searches, and also caps partial (2–4 digit) postal-code prefixes when `zipLimit` isn't set.
 - `threshold` is the minimum score (0–1) a result must reach to count as a match.
-- `zipLimit` controls how many results come back when the query is all digits. It defaults to unlimited on purpose — see the next section for why.
+- `zipLimit` controls how many results come back when the query is all digits. When omitted, a complete 5-digit code is unlimited while a 2–4 digit prefix is capped at `limit` — see the next section for why.
 - `romanizationAliases` turns on automatic expansion of non-RTGS English spellings to match what's in the dataset.
 
 ## Ranking

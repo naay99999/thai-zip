@@ -20,14 +20,14 @@ import ComponentPreview from '../../../components/ComponentPreview.astro'
 searchThaiAddress(index, query, {
   limit: 10,                 // text queries only
   threshold: 0.4,            // match quality 0–1
-  zipLimit: Infinity,        // all-digit queries — unlimited by default
+  zipLimit: undefined,       // all-digit queries — see below for the default
   romanizationAliases: true, // expand non-RTGS spellings
 })
 ```
 
-- `limit` จำกัดจำนวนผลลัพธ์เฉพาะการค้นหาด้วยข้อความ ไม่มีผลกับการค้นหาด้วยรหัสไปรษณีย์
+- `limit` จำกัดจำนวนผลลัพธ์ของการค้นหาด้วยข้อความ และใช้เป็นค่าจำกัดของรหัสไปรษณีย์ที่พิมพ์ไม่ครบ 5 หลักด้วย (เมื่อไม่ได้ส่ง `zipLimit`)
 - `threshold` คือคะแนนขั้นต่ำ (0–1) ที่ผลลัพธ์ต้องได้ถึงจะถูกนับว่า match
-- `zipLimit` ควบคุมจำนวนผลลัพธ์เมื่อ query เป็นตัวเลขล้วน ค่าเริ่มต้นไม่จำกัดโดยตั้งใจ — ดูเหตุผลในหัวข้อถัดไป
+- `zipLimit` ควบคุมจำนวนผลลัพธ์เมื่อ query เป็นตัวเลขล้วน ถ้าไม่ส่งมา รหัสครบ 5 หลักจะไม่จำกัด ส่วน prefix 2–4 หลักจะจำกัดที่ `limit` — ดูเหตุผลในหัวข้อถัดไป
 - `romanizationAliases` เปิดการแปลงคำสะกดภาษาอังกฤษที่ไม่ใช่ RTGS ให้ตรงกับข้อมูลในระบบโดยอัตโนมัติ
 
 ## การจัดอันดับ

@@ -29,7 +29,7 @@ Hook แบบ headless ที่ครอบ `searchThaiAddress` พร้อ�
 | `limit?` | `number` | `10` | ส่งต่อให้ `searchThaiAddress` ตรง ๆ — จำกัดจำนวนผลลัพธ์สำหรับ query แบบข้อความ |
 | `debounce?` | `number` | `200` | ระยะเวลารอ (มิลลิวินาที) ก่อนค้นหาจริงหลังผู้ใช้หยุดพิมพ์ |
 | `threshold?` | `number` | `0.4` | ส่งต่อให้ `searchThaiAddress` ตรง ๆ — คะแนนขั้นต่ำที่นับว่า match |
-| `zipLimit?` | `number` | `undefined` | ส่งต่อให้ `searchThaiAddress` ตรง ๆ (ไม่ได้ตั้งค่า default ในตัว hook เอง — ถ้าไม่ส่งมา `searchThaiAddress` จะใช้ค่าเริ่มต้นของตัวเอง คือ `Infinity`) |
+| `zipLimit?` | `number` | `undefined` | ส่งต่อให้ `searchThaiAddress` ตรง ๆ (ไม่ได้ตั้งค่า default ในตัว hook เอง — ถ้าไม่ส่งมา `searchThaiAddress` จะใช้ค่าเริ่มต้นของตัวเอง คือ `Infinity` สำหรับรหัส 5 หลัก และ `limit` สำหรับ prefix 2–4 หลัก) |
 | `initialQuery?` | `string` | `''` | ค่าเริ่มต้นของ `query` ตอน render ครั้งแรก **ไม่ trigger การค้นหา** — เหมาะกับการเติมข้อความในช่อง input จากที่อยู่ที่เลือกไว้แล้ว (เช่น `defaultValues` ของ react-hook-form) โดยไม่เปิด dropdown ขึ้นมาเอง |
 | `locale?` | `AddressLocale` (`'th' \| 'en'`) | `undefined` | ภาษาของ field `label` ใน `suggestions` ที่คืนกลับ ส่งต่อให้ `formatThaiAddressSuggestion` |
 | `onSelect?` | `(address: ResolvedThaiAddress) => void` | `undefined` | เรียกหลังจาก `selectSuggestion` resolve ที่อยู่สำเร็จ |
