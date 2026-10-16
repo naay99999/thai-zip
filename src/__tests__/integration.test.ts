@@ -4,6 +4,7 @@ import { searchThaiAddress, lookupByZipCode } from '../core/search'
 import { formatThaiAddressSuggestion } from '../core/formatter'
 import { resolveThaiAddress } from '../core/resolver'
 import type { TrigramIndex } from '../types'
+import { t as defaultTambons } from '../data/defaultData'
 
 let index: TrigramIndex
 
@@ -126,6 +127,39 @@ describe('defaultIndex integration', () => {
   it('lookupByZipCode returns all 33 records for 45000', () => {
     const results = lookupByZipCode(index, '45000')
     expect(results).toHaveLength(33)
+  })
+
+  // Amphures and tambons whose names start with เกาะ were once missing from
+  // data/, which left island zip codes unsearchable (see data/SOURCE.md).
+  it.each([
+    ['84320', 'เกาะสมุย'],
+    ['84140', 'เกาะสมุย'],
+    ['84280', 'เกาะพะงัน'],
+    ['84360', 'เกาะพะงัน'],
+    ['23170', 'เกาะช้าง'],
+    ['81150', 'เกาะลันตา'],
+    ['20120', 'เกาะสีชัง'],
+    ['52130', 'เกาะคา'],
+  ])('finds island district records for zip %s (%s)', (zip, amphure) => {
+    const results = lookupByZipCode(index, zip)
+    expect(results.length).toBeGreaterThan(0)
+    expect(results.every(r => r.amphureNameTh === amphure)).toBe(true)
+  })
+
+  it('finds tambons named เกาะ… by name', () => {
+    const results = searchThaiAddress(index, 'เกาะเต่า')
+    expect(results.some(r => r.tambonNameTh === 'เกาะเต่า' && r.amphureNameTh === 'เกาะพะงัน')).toBe(true)
+    expect(searchThaiAddress(index, 'ko samui')[0].amphureNameTh).toBe('เกาะสมุย')
+  })
+
+  it('includes อำเภอกัลยาณิวัฒนา (Chiang Mai)', () => {
+    const results = searchThaiAddress(index, 'กัลยาณิวัฒนา').filter(r => r.amphureNameTh === 'กัลยาณิวัฒนา')
+    expect(results.map(r => r.tambonNameTh).sort()).toEqual(['บ้านจันทร์', 'แจ่มหลวง', 'แม่แดด'].sort())
+    expect(results.every(r => r.provinceNameTh === 'เชียงใหม่' && r.zipCode === '58130')).toBe(true)
+  })
+
+  it('indexes every bundled tambon (no tambon is orphaned from its amphure)', () => {
+    expect(index.records).toHaveLength(defaultTambons.length)
   })
 
   // S-5: bound the raw query before the (multi-pass) normalizer runs over it

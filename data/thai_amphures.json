@@ -959,6 +959,13 @@
     "deleted_at": null
   },
   {
+    "id": 2008,
+    "name_th": "เกาะสีชัง",
+    "name_en": "Ko Sichang",
+    "province_id": 11,
+    "deleted_at": null
+  },
+  {
     "id": 2009,
     "name_th": "สัตหีบ",
     "name_en": "Sattahip",
@@ -969,6 +976,13 @@
     "id": 2010,
     "name_th": "บ่อทอง",
     "name_en": "Bo Thong",
+    "province_id": 11,
+    "deleted_at": null
+  },
+  {
+    "id": 2011,
+    "name_th": "เกาะจันทร์",
+    "name_en": "Ko Chan",
     "province_id": 11,
     "deleted_at": null
   },
@@ -1130,6 +1144,20 @@
     "id": 2305,
     "name_th": "แหลมงอบ",
     "name_en": "Laem Ngop",
+    "province_id": 14,
+    "deleted_at": null
+  },
+  {
+    "id": 2306,
+    "name_th": "เกาะกูด",
+    "name_en": "Ko Kut",
+    "province_id": 14,
+    "deleted_at": null
+  },
+  {
+    "id": 2307,
+    "name_th": "เกาะช้าง",
+    "name_en": "Ko Chang",
     "province_id": 14,
     "deleted_at": null
   },
@@ -3773,6 +3801,13 @@
     "deleted_at": null
   },
   {
+    "id": 5025,
+    "name_th": "กัลยาณิวัฒนา",
+    "name_en": "Galyani Vadhana",
+    "province_id": 38,
+    "deleted_at": null
+  },
+  {
     "id": 5101,
     "name_th": "เมืองลำพูน",
     "name_en": "Mueang Lamphun",
@@ -3839,6 +3874,13 @@
     "id": 5202,
     "name_th": "แม่เมาะ",
     "name_en": "Mae Mo",
+    "province_id": 40,
+    "deleted_at": null
+  },
+  {
+    "id": 5203,
+    "name_th": "เกาะคา",
+    "name_en": "Ko Kha",
     "province_id": 40,
     "deleted_at": null
   },
@@ -5579,6 +5621,13 @@
     "deleted_at": null
   },
   {
+    "id": 8103,
+    "name_th": "เกาะลันตา",
+    "name_en": "Ko Lanta",
+    "province_id": 64,
+    "deleted_at": null
+  },
+  {
     "id": 8104,
     "name_th": "คลองท่อม",
     "name_en": "Khlong Thom",
@@ -5617,6 +5666,13 @@
     "id": 8201,
     "name_th": "เมืองพังงา",
     "name_en": "Mueang Phang-nga",
+    "province_id": 65,
+    "deleted_at": null
+  },
+  {
+    "id": 8202,
+    "name_th": "เกาะยาว",
+    "name_en": "Ko Yao",
     "province_id": 65,
     "deleted_at": null
   },
@@ -5701,6 +5757,20 @@
     "id": 8403,
     "name_th": "ดอนสัก",
     "name_en": "Don Sak",
+    "province_id": 67,
+    "deleted_at": null
+  },
+  {
+    "id": 8404,
+    "name_th": "เกาะสมุย",
+    "name_en": "Ko Samui",
+    "province_id": 67,
+    "deleted_at": null
+  },
+  {
+    "id": 8405,
+    "name_th": "เกาะพะงัน",
+    "name_en": "Ko Pha-ngan",
     "province_id": 67,
     "deleted_at": null
   },

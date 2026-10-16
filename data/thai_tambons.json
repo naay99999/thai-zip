@@ -5536,6 +5536,14 @@
     "deleted_at": null
   },
   {
+    "id": 160412,
+    "zip_code": 15130,
+    "name_th": "เกาะรัง",
+    "name_en": "Ko Rang",
+    "amphure_id": 1604,
+    "deleted_at": null
+  },
+  {
     "id": 160414,
     "zip_code": 15130,
     "name_th": "ท่ามะนาว",
@@ -9797,6 +9805,38 @@
     "name_th": "คลองใหญ่",
     "name_en": "Khlong Yai",
     "amphure_id": 2305,
+    "deleted_at": null
+  },
+  {
+    "id": 230601,
+    "zip_code": 23120,
+    "name_th": "เกาะหมาก",
+    "name_en": "Ko Mak",
+    "amphure_id": 2306,
+    "deleted_at": null
+  },
+  {
+    "id": 230602,
+    "zip_code": 23000,
+    "name_th": "เกาะกูด",
+    "name_en": "Ko Kut",
+    "amphure_id": 2306,
+    "deleted_at": null
+  },
+  {
+    "id": 230701,
+    "zip_code": 23170,
+    "name_th": "เกาะช้าง",
+    "name_en": "Ko Chang",
+    "amphure_id": 2307,
+    "deleted_at": null
+  },
+  {
+    "id": 230702,
+    "zip_code": 23170,
+    "name_th": "เกาะช้างใต้",
+    "name_en": "Ko Chang Tai",
+    "amphure_id": 2307,
     "deleted_at": null
   },
   {
@@ -52592,6 +52632,22 @@
     "deleted_at": null
   },
   {
+    "id": 810301,
+    "zip_code": 81150,
+    "name_th": "เกาะลันตาใหญ่",
+    "name_en": "Ko Lanta Yai",
+    "amphure_id": 8103,
+    "deleted_at": null
+  },
+  {
+    "id": 810302,
+    "zip_code": 81150,
+    "name_th": "เกาะลันตาน้อย",
+    "name_en": "Ko Lanta Noi",
+    "amphure_id": 8103,
+    "deleted_at": null
+  },
+  {
     "id": 810303,
     "zip_code": 81120,
     "name_th": "เกาะกลาง",
@@ -52816,6 +52872,14 @@
     "deleted_at": null
   },
   {
+    "id": 810802,
+    "zip_code": 81130,
+    "name_th": "เกาะศรีบอยา",
+    "name_en": "Ko Si Boya",
+    "amphure_id": 8108,
+    "deleted_at": null
+  },
+  {
     "id": 810803,
     "zip_code": 81130,
     "name_th": "คลองขนาน",
@@ -52920,11 +52984,35 @@
     "deleted_at": null
   },
   {
+    "id": 820108,
+    "zip_code": 82000,
+    "name_th": "เกาะปันหยี",
+    "name_en": "Ko Panyi",
+    "amphure_id": 8201,
+    "deleted_at": null
+  },
+  {
     "id": 820109,
     "zip_code": 82000,
     "name_th": "ป่ากอ",
     "name_en": "Pa Ko",
     "amphure_id": 8201,
+    "deleted_at": null
+  },
+  {
+    "id": 820201,
+    "zip_code": 82160,
+    "name_th": "เกาะยาวน้อย",
+    "name_en": "Ko Yao Noi",
+    "amphure_id": 8202,
+    "deleted_at": null
+  },
+  {
+    "id": 820202,
+    "zip_code": 82160,
+    "name_th": "เกาะยาวใหญ่",
+    "name_en": "Ko Yao Yai",
+    "amphure_id": 8202,
     "deleted_at": null
   },
   {
@@ -53088,6 +53176,14 @@
     "deleted_at": null
   },
   {
+    "id": 820508,
+    "zip_code": 82190,
+    "name_th": "เกาะคอเขา",
+    "name_en": "Ko Kho Khao",
+    "amphure_id": 8205,
+    "deleted_at": null
+  },
+  {
     "id": 820601,
     "zip_code": 82150,
     "name_th": "คุระ",
@@ -53100,6 +53196,14 @@
     "zip_code": 82150,
     "name_th": "บางวัน",
     "name_en": "Bang Wan",
+    "amphure_id": 8206,
+    "deleted_at": null
+  },
+  {
+    "id": 820603,
+    "zip_code": 82150,
+    "name_th": "เกาะพระทอง",
+    "name_en": "Ko Phra Thong",
     "amphure_id": 8206,
     "deleted_at": null
   },
@@ -53624,10 +53728,26 @@
     "deleted_at": null
   },
   {
+    "id": 840501,
+    "zip_code": 84280,
+    "name_th": "เกาะพะงัน",
+    "name_en": "Ko Pha-ngan",
+    "amphure_id": 8405,
+    "deleted_at": null
+  },
+  {
     "id": 840502,
     "zip_code": 84280,
     "name_th": "บ้านใต้",
     "name_en": "Ban Tai",
+    "amphure_id": 8405,
+    "deleted_at": null
+  },
+  {
+    "id": 840503,
+    "zip_code": 84360,
+    "name_th": "เกาะเต่า",
+    "name_en": "Koh Tao",
     "amphure_id": 8405,
     "deleted_at": null
   },
@@ -54440,6 +54560,14 @@
     "deleted_at": null
   },
   {
+    "id": 850109,
+    "zip_code": 85000,
+    "name_th": "เกาะพยาม",
+    "name_en": "Ko Phayam",
+    "amphure_id": 8501,
+    "deleted_at": null
+  },
+  {
     "id": 850201,
     "zip_code": 85130,
     "name_th": "ละอุ่นใต้",
@@ -55204,6 +55332,14 @@
     "zip_code": 90000,
     "name_th": "ทุ่งหวัง",
     "name_en": "Thung Wang",
+    "amphure_id": 9001,
+    "deleted_at": null
+  },
+  {
+    "id": 900106,
+    "zip_code": 90100,
+    "name_th": "เกาะยอ",
+    "name_en": "Ko Yo",
     "amphure_id": 9001,
     "deleted_at": null
   },
@@ -56216,6 +56352,14 @@
     "deleted_at": null
   },
   {
+    "id": 910106,
+    "zip_code": 91000,
+    "name_th": "เกาะสาหร่าย",
+    "name_en": "Ko Sarai",
+    "amphure_id": 9101,
+    "deleted_at": null
+  },
+  {
     "id": 910107,
     "zip_code": 91000,
     "name_th": "ตันหยงโป",
@@ -56672,6 +56816,14 @@
     "deleted_at": null
   },
   {
+    "id": 920213,
+    "zip_code": 92110,
+    "name_th": "เกาะลิบง",
+    "name_en": "Ko Libong",
+    "amphure_id": 9202,
+    "deleted_at": null
+  },
+  {
     "id": 920214,
     "zip_code": 92110,
     "name_th": "คลองชีล้อม",
@@ -56796,6 +56948,14 @@
     "zip_code": 92180,
     "name_th": "ลิพัง",
     "name_en": "Liphang",
+    "amphure_id": 9204,
+    "deleted_at": null
+  },
+  {
+    "id": 920411,
+    "zip_code": 92120,
+    "name_th": "เกาะสุกร",
+    "name_en": "Ko Sukon",
     "amphure_id": 9204,
     "deleted_at": null
   },
@@ -57464,6 +57624,22 @@
     "deleted_at": null
   },
   {
+    "id": 930603,
+    "zip_code": 93120,
+    "name_th": "เกาะนางคำ",
+    "name_en": "Ko Nang Kham",
+    "amphure_id": 9306,
+    "deleted_at": null
+  },
+  {
+    "id": 930604,
+    "zip_code": 93120,
+    "name_th": "เกาะหมาก",
+    "name_en": "Ko Mak",
+    "amphure_id": 9306,
+    "deleted_at": null
+  },
+  {
     "id": 930605,
     "zip_code": 93120,
     "name_th": "ฝาละมี",
@@ -57588,6 +57764,14 @@
     "zip_code": 93210,
     "name_th": "ลานข่อย",
     "name_en": "Lan Khoi",
+    "amphure_id": 9310,
+    "deleted_at": null
+  },
+  {
+    "id": 931003,
+    "zip_code": 93210,
+    "name_th": "เกาะเต่า",
+    "name_en": "Ko Tao",
     "amphure_id": 9310,
     "deleted_at": null
   },
@@ -59108,6 +59292,14 @@
     "zip_code": 96110,
     "name_th": "บางขุนทอง",
     "name_en": "Bang Khun Thong",
+    "amphure_id": 9602,
+    "deleted_at": null
+  },
+  {
+    "id": 960206,
+    "zip_code": 96110,
+    "name_th": "เกาะสะท้อน",
+    "name_en": "Ko Sathon",
     "amphure_id": 9602,
     "deleted_at": null
   },
