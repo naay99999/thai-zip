@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.8](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.7...thaizip-v0.7.8) (2026-10-16)
+
+
+### Bug Fixes
+
+* restore missing island districts and Galyani Vadhana to the bundled data ([37837a8](https://github.com/naay99999/thai-zip/commit/37837a834a2f1c35e16463c17e36ff2c92d24379))
+* restore missing island districts and Galyani Vadhana to the bundled data ([be3fbfa](https://github.com/naay99999/thai-zip/commit/be3fbfa2febdbe23f27bbb5ba9c2e7d6f3040502))
+
 ## [0.7.7](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.6...thaizip-v0.7.7) (2026-10-15)
 
 
