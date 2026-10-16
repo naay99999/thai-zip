@@ -1,0 +1,34 @@
+name: Bug report
+description: Something in thaizip does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! **Security issues** should be reported privately via
+        [Security advisories](https://github.com/naay99999/thai-zip/security/advisories/new) instead.
+  - type: input
+    id: version
+    attributes:
+      label: thaizip version
+      placeholder: e.g. 1.2.3
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include the input you used, what you expected, and what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A minimal code snippet or command sequence.
+      render: shell
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: e.g. Node 24, Next.js 16, npm 11, macOS
