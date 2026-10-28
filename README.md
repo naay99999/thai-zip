@@ -5,7 +5,7 @@
 
 Fast fuzzy autocomplete for Thai addresses — subdistrict, district, province, postal code.
 
-📚 **[Documentation](https://naay99999.github.io/thai-zip/)** (ไทย / [English](https://naay99999.github.io/thai-zip/en/)) · [Playground](https://naay99999.github.io/thai-zip/en/playground/)
+📚 **[Documentation](https://thaizip.vercel.app/docs)** (ไทย / [English](https://thaizip.vercel.app/en/docs)) · Using a coding agent? Point it at [`llms.txt`](https://thaizip.vercel.app/llms.txt)
 
 ![thaizip demo — typing "ลาดพร้าว", "ladprao" and "10230" to get fuzzy Thai address suggestions, then resolving a selection](.github/assets/demo.gif)
 
@@ -44,13 +44,13 @@ import { useThaiAddressAutocomplete } from 'thaizip/react'
 const { query, setQuery, suggestions, selectSuggestion } = useThaiAddressAutocomplete({ index })
 ```
 
-Need a ready-made UI component? [`react-thaizip`](https://github.com/naay99999/react-thai-zip) scaffolds one into your project.
+Need a ready-made UI component? [`react-thaizip`](https://thaizip.vercel.app/en/docs/react) scaffolds one into your project.
 
 ## Learn more
 
-- [Getting started](https://naay99999.github.io/thai-zip/en/getting-started/)
-- [Guides](https://naay99999.github.io/thai-zip/en/guides/search/) — search, postal codes, cascades, English input, React, custom data
-- [API reference](https://naay99999.github.io/thai-zip/en/reference/search/)
+- [Getting started](https://thaizip.vercel.app/en/docs)
+- [Search](https://thaizip.vercel.app/en/docs/search) — options, ranking, postal codes, English input
+- [Cascade lists](https://thaizip.vercel.app/en/docs/cascade) · [Format and resolve](https://thaizip.vercel.app/en/docs/format) · [React hook](https://thaizip.vercel.app/en/docs/react-hook) · [Data and index](https://thaizip.vercel.app/en/docs/data)
 
 ## License
 

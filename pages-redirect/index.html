@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>thaizip docs have moved</title>
+<script>
+  // The docs moved from naay99999.github.io/thai-zip to thaizip.vercel.app.
+  // GitHub Pages serves this file for every old URL; map each to its new page.
+  (function () {
+    var SITE = 'https://thaizip.vercel.app';
+    var MOVED = {
+      '': '/docs',
+      'getting-started': '/docs',
+      'guides/search': '/docs/search',
+      'guides/zip-lookup': '/docs/search',
+      'guides/english-input': '/docs/search',
+      'guides/cascade': '/docs/cascade',
+      'guides/react': '/docs/react-hook',
+      'guides/custom-data': '/docs/data',
+      'playground': '/docs/search',
+      'reference/search': '/docs/search',
+      'reference/enumerate': '/docs/cascade',
+      'reference/formatter': '/docs/format',
+      'reference/resolver': '/docs/format',
+      'reference/data': '/docs/data',
+      'reference/react': '/docs/react-hook',
+      'reference/types': '/docs',
+      'llms.txt': '/llms.txt',
+      'llms-full.txt': '/llms-full.txt'
+    };
+    var path = location.pathname.replace(/^\/thai-zip\/?/, '').replace(/\/$/, '');
+    var lang = '';
+    if (path === 'en' || path.indexOf('en/') === 0) {
+      lang = '/en';
+      path = path.replace(/^en\/?/, '');
+    }
+    var md = /\.md$/.test(path);
+    if (md) path = path.replace(/\.md$/, '');
+    var target = MOVED[path];
+    var url = target === undefined ? SITE + lang + '/docs'
+      : /\.txt$/.test(target) ? SITE + target
+      : SITE + lang + target + (md ? '.md' : '');
+    location.replace(url);
+  })();
+</script>
+</head>
+<body>
+<p>The thaizip docs have moved to <a href="https://thaizip.vercel.app/docs">thaizip.vercel.app</a>.</p>
+</body>
+</html>
