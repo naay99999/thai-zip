@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.9](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.8...thaizip-v0.7.9) (2026-10-29)
+
+
+### Documentation
+
+* move docs links to thai-zip.vercel.app ([fb44e16](https://github.com/naay99999/thai-zip/commit/fb44e161438887e5e06556952ae1a379bea3f1b7))
+
 ## [0.7.8](https://github.com/naay99999/thai-zip/compare/thaizip-v0.7.7...thaizip-v0.7.8) (2026-10-16)
 
 
