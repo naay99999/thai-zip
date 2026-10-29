@@ -60,7 +60,7 @@ This is a headless Thai address autocomplete library published as `thaizip`. It 
 
 ## Documentation
 
-The docs site (https://thai-zip.vercel.app) lives in its own repo, **naay99999/thai-zip-documents**, which documents both packages and installs `thaizip` from npm; this package's pages are `content/docs/(core)/` there. Update them in the same change window as any public API change here — they go live once the release is published and that repo bumps its `thaizip` dependency. `docs/reports` and `docs/superpowers` are design documents, not the site.
+The docs site (https://thai-zip.vercel.app) lives in its own repo, **naay99999/thai-zip-documents**, which documents both packages and installs `thaizip` from npm; this package's pages are `content/docs/(core)/` there. Update them in the same change window as any public API change here — they go live once the release is published and that repo bumps its `thaizip` dependency. `docs/reports` holds audit and implementation reports, not the site.
 
 ## Releasing
 
