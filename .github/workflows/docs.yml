@@ -1,6 +1,6 @@
 name: Docs redirect
 
-# The docs live at react-thai-zip.vercel.app (built from naay99999/react-thai-zip).
+# The docs live at thai-zip.vercel.app (built from naay99999/react-thai-zip).
 # GitHub Pages only serves pages-redirect/, which forwards old
 # naay99999.github.io/thai-zip URLs to their new pages.
 
